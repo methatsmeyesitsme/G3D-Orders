@@ -223,64 +223,83 @@ function ProductEditor() {
           onChange={(videoUrl) => setProduct({ ...product, videoUrl })}
         />
 
-        <section className="space-y-3 rounded-xl bg-card p-4 shadow-[var(--shadow-border)]">
-          <h3 className="font-display font-semibold">Gallery</h3>
+        <section className="space-y-4 rounded-xl bg-card p-4 shadow-[var(--shadow-border)]">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-display font-semibold">Gallery</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setProduct({
+                  ...product,
+                  gallery: [
+                    ...product.gallery,
+                    { url: "", kind: "image", alt: "" },
+                  ],
+                })
+              }
+            >
+              Add gallery item
+            </Button>
+          </div>
           {product.gallery.map((item, index) => (
-            <div key={index} className="grid gap-2 sm:grid-cols-[1fr_120px_auto]">
-              <Input
+            <div
+              key={index}
+              className="space-y-3 rounded-lg border border-border/70 p-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <select
+                  className="h-11 rounded-md border border-input bg-background px-2 text-sm"
+                  value={item.kind}
+                  onChange={(e) => {
+                    const kind = e.target.value as "image" | "gif" | "video";
+                    const gallery = product.gallery.map((g, i) =>
+                      i === index ? { ...g, kind } : g,
+                    );
+                    setProduct({ ...product, gallery });
+                  }}
+                >
+                  <option value="image">Image</option>
+                  <option value="gif">GIF</option>
+                  <option value="video">Video</option>
+                </select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setProduct({
+                      ...product,
+                      gallery: product.gallery.filter((_, i) => i !== index),
+                    })
+                  }
+                >
+                  Remove
+                </Button>
+              </div>
+              <FileUrlField
+                label={`Gallery item ${index + 1}`}
                 value={item.url}
-                onChange={(e) => {
+                accept={
+                  item.kind === "video"
+                    ? "video/*"
+                    : item.kind === "gif"
+                      ? "image/gif"
+                      : "image/*"
+                }
+                onChange={(url) => {
                   const gallery = product.gallery.map((g, i) =>
-                    i === index ? { ...g, url: e.target.value } : g,
+                    i === index ? { ...g, url } : g,
                   );
                   setProduct({ ...product, gallery });
                 }}
               />
-              <select
-                className="h-11 rounded-md border border-input bg-background px-2 text-sm"
-                value={item.kind}
-                onChange={(e) => {
-                  const kind = e.target.value as "image" | "gif" | "video";
-                  const gallery = product.gallery.map((g, i) =>
-                    i === index ? { ...g, kind } : g,
-                  );
-                  setProduct({ ...product, gallery });
-                }}
-              >
-                <option value="image">Image</option>
-                <option value="gif">GIF</option>
-                <option value="video">Video</option>
-              </select>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() =>
-                  setProduct({
-                    ...product,
-                    gallery: product.gallery.filter((_, i) => i !== index),
-                  })
-                }
-              >
-                Remove
-              </Button>
             </div>
           ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setProduct({
-                ...product,
-                gallery: [
-                  ...product.gallery,
-                  { url: "", kind: "image", alt: "" },
-                ],
-              })
-            }
-          >
-            Add gallery item
-          </Button>
+          {product.gallery.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No gallery items yet.</p>
+          ) : null}
         </section>
 
         <OptionEditor
