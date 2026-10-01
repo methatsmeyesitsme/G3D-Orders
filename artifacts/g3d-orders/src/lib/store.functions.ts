@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import { db, g3dCatalogState, g3dStoreOrders } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { DEFAULT_COLORS, DEFAULT_FIRMNESS, DEFAULT_SHAPES, DEFAULT_TEXTURE } from "@/lib/catalog-defaults";
+import { assertStoreAccess } from "@/lib/store-access.server";
 import type { G3dpgConfig, Order, OrderItem, OrderStatus, Product, ProductLine } from "@/lib/types";
 import { newId } from "@/lib/utils";
+import localCatalog from "../../data/catalog.json";
 
 const ADMIN_CODE = process.env.G3D_ADMIN_PASSCODE?.trim() || "2004051315";
 const GH_TOKEN = process.env.G3D_GITHUB_TOKEN?.trim();
@@ -16,7 +20,6 @@ const ORDERS_PATH = "data/orders";
 type Catalog = { lines: ProductLine[]; products: Product[] };
 
 function assertAdminAccess(code: string) { if (code !== ADMIN_CODE) throw new Error("Admin access denied"); }
-function requireGithubWrite() { if (!GH_TOKEN) throw new Error("G3D GitHub storage is not configured on this deployment."); }
 
 function ghHeaders(): Record<string,string> {
   const h: Record<string,string> = { Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28", "User-Agent":"G3D-Orders" };
@@ -35,32 +38,30 @@ function decodeGithubContent(content:string) { return Buffer.from(content.replac
 function encodeGithubContent(value:string) { return Buffer.from(value,"utf8").toString("base64"); }
 async function getGithubFile(path:string) { return ghJson<{content:string;sha:string}>(`/contents/${path}?ref=${encodeURIComponent(GH_BRANCH)}`); }
 async function readCatalog():Promise<Catalog> {
-  try { return JSON.parse(decodeGithubContent((await getGithubFile(CATALOG_PATH)).content)) as Catalog; }
-  catch { return { lines: [], products: [] }; }
-}
-async function writeGithubFile(path:string, content:string, message:string, sha?:string) {
-  requireGithubWrite();
-  const body: Record<string,unknown> = { message, content:encodeGithubContent(content), branch:GH_BRANCH };
-  if (sha) body.sha = sha;
-  await ghJson(`/contents/${path}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+  const [saved] = await db.select({ catalog: g3dCatalogState.catalog })
+    .from(g3dCatalogState)
+    .where(eq(g3dCatalogState.id, "primary"))
+    .limit(1);
+  if (saved) return saved.catalog as unknown as Catalog;
+  try {
+    return JSON.parse(decodeGithubContent((await getGithubFile(CATALOG_PATH)).content)) as Catalog;
+  } catch {
+    return localCatalog as unknown as Catalog;
+  }
 }
 async function writeCatalog(catalog:Catalog,message:string) {
-  let sha:string|undefined;
-  try { sha=(await getGithubFile(CATALOG_PATH)).sha; } catch {}
-  await writeGithubFile(CATALOG_PATH, JSON.stringify(catalog,null,2)+"\n", message, sha);
-}
-async function readOrderFile(path:string):Promise<Order> {
-  return JSON.parse(decodeGithubContent((await getGithubFile(path)).content)) as Order;
-}
-async function listOrderPaths() {
-  try {
-    const rows=await ghJson<Array<{name:string;path:string;type:string}>>(`/contents/${ORDERS_PATH}?ref=${encodeURIComponent(GH_BRANCH)}`);
-    return rows.filter(r=>r.type==="file"&&r.name.endsWith(".json")).map(r=>r.path);
-  } catch { return []; }
+  void message;
+  await db.insert(g3dCatalogState)
+    .values({ id: "primary", catalog })
+    .onConflictDoUpdate({
+      target: g3dCatalogState.id,
+      set: { catalog, updatedAt: new Date() },
+    });
 }
 async function nextOrderNumber() {
-  const paths=await listOrderPaths(); const used=new Set<string>();
-  for(const path of paths) { try { used.add((await readOrderFile(path)).orderNumber); } catch {} }
+  const rows = await db.select({ orderNumber: g3dStoreOrders.orderNumber })
+    .from(g3dStoreOrders);
+  const used = new Set(rows.map((row) => row.orderNumber));
   const alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   for(let attempt=0;attempt<50;attempt++) {
     let suffix=""; for(let i=0;i<6;i++) suffix+=alphabet[Math.floor(Math.random()*alphabet.length)];

@@ -2,17 +2,28 @@ import {
   createRootRoute,
   HeadContent,
   Outlet,
+  redirect,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppErrorComponent } from "@/lib/error-component";
+import { checkStoreAccess } from "@/lib/store-access.server";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "G3D Orders";
 
 export const Route = createRootRoute({
+  beforeLoad: async ({ location }) => {
+    if (location.pathname === "/access") return;
+    if (!(await checkStoreAccess())) {
+      throw redirect({
+        to: "/access",
+        search: { next: location.href || "/" },
+      });
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
