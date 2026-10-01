@@ -1,1 +1,2 @@
 - [G3D storage boundary](github-imports.md) — app-owned data stays in PostgreSQL; the public GitHub catalog is read-only seed data.
+- [G3D production runtime](artifact-runtime.md) — keep server functions live after publishing; static serving cannot enforce the gate or persist orders.
