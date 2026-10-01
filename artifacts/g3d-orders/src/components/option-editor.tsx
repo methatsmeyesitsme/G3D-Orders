@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FileUrlField } from "@/components/file-url-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { OptionChoice, OptionMeta } from "@/lib/types";
@@ -184,11 +185,12 @@ export function OptionEditor({
               </Button>
             </div>
             {showHex ? (
-              <div className="col-span-2 sm:col-span-8">
-                <Label>Swatch photo URL</Label>
-                <Input
+              <div className="col-span-2 sm:col-span-12">
+                <FileUrlField
+                  label="Swatch photo"
                   value={option.imageUrl ?? ""}
-                  onChange={(e) => patch(index, { imageUrl: e.target.value })}
+                  accept="image/*"
+                  onChange={(imageUrl) => patch(index, { imageUrl })}
                 />
               </div>
             ) : null}
