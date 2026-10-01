@@ -1,5 +1,5 @@
-import { i as __toESM } from "../_runtime.mjs";
-import { n as require_react } from "./@radix-ui/react-compose-refs+[...].mjs";
+import { o as __toESM } from "../_runtime.mjs";
+import { y as require_react } from "./@radix-ui/react-alert-dialog+[...].mjs";
 //#region ../../node_modules/.pnpm/lucide-react@0.545.0_react@19.1.0/node_modules/lucide-react/dist/esm/shared/src/utils.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 /**
@@ -167,5 +167,18 @@ var TriangleAlert = createLucideIcon("triangle-alert", [
 		key: "p32p05"
 	}]
 ]);
+/**
+* @license lucide-react v0.545.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var X = createLucideIcon("x", [["path", {
+	d: "M18 6 6 18",
+	key: "1bl5f8"
+}], ["path", {
+	d: "m6 6 12 12",
+	key: "d8bk6v"
+}]]);
 //#endregion
-export { Minus as a, Plus as i, Trash2 as n, ShoppingBag as r, TriangleAlert as t };
+export { Plus as a, ShoppingBag as i, TriangleAlert as n, Minus as o, Trash2 as r, X as t };

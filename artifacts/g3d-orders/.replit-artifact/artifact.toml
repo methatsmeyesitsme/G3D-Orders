@@ -15,13 +15,20 @@ localPort = 21878
 run = "pnpm --filter @workspace/g3d-orders run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/g3d-orders", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/g3d-orders/dist/public"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.build]
+args = [ "pnpm", "--filter", "@workspace/g3d-orders", "run", "build" ]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = [ "pnpm", "--filter", "@workspace/g3d-orders", "run", "serve" ]
+
+[services.production.run.env]
+PORT = "8080"
+NODE_ENV = "production"
+BASE_PATH = "/"
 
 [services.env]
 PORT = "21878"

@@ -1,7 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { createServerFn } from "@tanstack/react-start";
 import { getRequest, setCookie } from "@tanstack/react-start/server";
-import { z } from "zod";
 
 const ACCESS_COOKIE = "g3d_store_access";
 const ACCESS_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
@@ -19,6 +17,36 @@ function signature(expiresAt: number, code: string, secret: string): string {
   return createHmac("sha256", secret)
     .update(`g3d-store-access:${code}:${expiresAt}`)
     .digest("base64url");
+}
+
+export function verifyStoreCode(
+  candidate: string,
+): "valid" | "invalid" | "not-configured" {
+  const code = process.env.G3D_STORE_PASSCODE?.trim();
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!code || !secret) return "not-configured";
+  return equalSecret(candidate, code) ? "valid" : "invalid";
+}
+
+export function setStoreAccessCookie(): void {
+  const code = process.env.G3D_STORE_PASSCODE?.trim();
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!code || !secret) {
+    throw new Error("Store access is not configured.");
+  }
+
+  const expiresAt = Math.floor(Date.now() / 1000) + ACCESS_MAX_AGE_SECONDS;
+  setCookie(
+    ACCESS_COOKIE,
+    `${expiresAt}.${signature(expiresAt, code, secret)}`,
+    {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: ACCESS_MAX_AGE_SECONDS,
+    },
+  );
 }
 
 export function hasStoreAccess(): boolean {
@@ -56,36 +84,3 @@ export function assertStoreAccess(): void {
     throw new Error("Enter the store access code to continue.");
   }
 }
-
-export const checkStoreAccess = createServerFn({ method: "GET" }).handler(
-  async () => hasStoreAccess(),
-);
-
-export const unlockStore = createServerFn({ method: "POST" })
-  .validator(z.object({ code: z.string().trim().min(1).max(100) }))
-  .handler(async ({ data }) => {
-    const configuredCode = process.env.G3D_STORE_PASSCODE?.trim();
-    const secret = process.env.SESSION_SECRET?.trim();
-
-    if (!configuredCode || !secret) {
-      return { ok: false as const, reason: "not-configured" as const };
-    }
-    if (!equalSecret(data.code, configuredCode)) {
-      return { ok: false as const, reason: "invalid" as const };
-    }
-
-    const expiresAt = Math.floor(Date.now() / 1000) + ACCESS_MAX_AGE_SECONDS;
-    setCookie(
-      ACCESS_COOKIE,
-      `${expiresAt}.${signature(expiresAt, configuredCode, secret)}`,
-      {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: ACCESS_MAX_AGE_SECONDS,
-      },
-    );
-
-    return { ok: true as const };
-  });

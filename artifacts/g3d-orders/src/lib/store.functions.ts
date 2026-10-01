@@ -3,7 +3,12 @@ import { db, g3dCatalogState, g3dStoreOrders } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { DEFAULT_COLORS, DEFAULT_FIRMNESS, DEFAULT_SHAPES, DEFAULT_TEXTURE } from "@/lib/catalog-defaults";
-import { assertStoreAccess } from "@/lib/store-access.server";
+import {
+  assertStoreAccess,
+  hasStoreAccess,
+  setStoreAccessCookie,
+  verifyStoreCode,
+} from "@/lib/store-access.server";
 import type { G3dpgConfig, Order, OrderItem, OrderStatus, Product, ProductLine } from "@/lib/types";
 import { newId } from "@/lib/utils";
 import localCatalog from "../../data/catalog.json";
@@ -69,6 +74,14 @@ async function nextOrderNumber() {
 }
 function mapProduct(p:Product,line?:ProductLine):Product { return {...p,lineSlug:line?.slug,lineName:line?.name}; }
 function activeProducts(c:Catalog,line:ProductLine) { return c.products.filter(p=>p.lineId===line.id&&p.active).sort((a,b)=>a.sortOrder-b.sortOrder||a.name.localeCompare(b.name)).map(p=>mapProduct(p,line)); }
+
+export const checkStoreAccess=createServerFn({method:"GET"}).handler(async()=>hasStoreAccess());
+export const unlockStore=createServerFn({method:"POST"}).validator(z.object({code:z.string().trim().min(1).max(100)})).handler(async({data})=>{
+  const result=verifyStoreCode(data.code);
+  if(result!=="valid") return {ok:false as const,reason:result};
+  setStoreAccessCookie();
+  return {ok:true as const};
+});
 
 export const verifyAdminCode=createServerFn({method:"POST"}).validator(z.object({code:z.string()})).handler(async({data})=>{
   assertStoreAccess();

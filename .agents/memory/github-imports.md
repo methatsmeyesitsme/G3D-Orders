@@ -1,10 +1,10 @@
 ---
-name: GitHub import permissions
-description: Separates public repository cloning from the app's runtime GitHub write access.
+name: G3D storage boundary
+description: Keeps imported GitHub data read-only and app-owned changes in persistent storage.
 ---
 
-A successful public clone only grants access to repository contents; it does not authorize the running app to write orders or catalog changes back to GitHub.
+The G3D Orders GitHub repository is a read-only catalog seed. Catalog edits/deletions and order records/status changes belong in the app's PostgreSQL database; never write them back to the shared repository.
 
-**Why:** The imported storefront could read public catalog data without a connector, but its order and admin mutations require a separate GitHub credential.
+**Why:** The user chose app-owned persistent storage for catalog changes and orders, and wants the shared GitHub repository left unchanged.
 
-**How to apply:** Keep public preview reads independent from write authorization. Enable mutations only after setting up the needed provider access through Replit's integration or secrets flow.
+**How to apply:** Read GitHub only to seed the catalog when no saved database snapshot exists. Keep all runtime mutations in PostgreSQL unless the user explicitly changes this decision.

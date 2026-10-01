@@ -1,12 +1,14 @@
-import { n as __exportAll } from "../_runtime.mjs";
-import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
-import { h as require_jsx_runtime, o as RouterProvider, r as defineHandlerCallback, t as renderRouterToStream } from "../_libs/@tanstack/react-router+[...].mjs";
+import { r as __exportAll } from "../_runtime.mjs";
+import { v as require_jsx_runtime, y as require_react } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { a as RouterProvider, n as defineHandlerCallback, t as renderRouterToStream } from "../_libs/@tanstack/react-router+[...].mjs";
 import { PassThrough, Readable } from "node:stream";
 import { AsyncLocalStorage } from "node:async_hooks";
 //#region node_modules/.nitro/vite/services/ssr/index.js
 var ssr_exports = /* @__PURE__ */ __exportAll({
+	a: () => setCookie,
 	createServerEntry: () => createServerEntry,
 	default: () => server_default,
+	i: () => getRequest,
 	n: () => TSS_SERVER_FUNCTION,
 	r: () => getServerFnById,
 	t: () => createServerFn
@@ -549,6 +551,222 @@ function errorResponse(error, debug, errHeaders) {
 		headers
 	});
 }
+var COOKIE_MAX_AGE_LIMIT = 3456e4;
+var cookieNameRegExp = /^[\u0021-\u003A\u003C\u003E-\u007E]+$/;
+var cookieValueRegExp = /^[\u0021-\u003A\u003C-\u007E]*$/;
+var domainValueRegExp = /^([.]?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+var pathValueRegExp = /^[\u0020-\u003A\u003C-\u007E]*$/;
+var __toString = Object.prototype.toString;
+function serialize(_a0, _a1, _a2) {
+	const isObj = typeof _a0 === "object" && _a0 !== null;
+	const options = isObj ? _a1 : _a2;
+	const stringify = options?.stringify || JSON.stringify;
+	const cookie = isObj ? _a0 : {
+		..._a2,
+		name: _a0,
+		value: _a1 == void 0 ? "" : typeof _a1 === "string" ? _a1 : stringify(_a1)
+	};
+	const enc = options?.encode || encodeURIComponent;
+	if (!cookieNameRegExp.test(cookie.name)) throw new TypeError(`argument name is invalid: ${cookie.name}`);
+	const value = cookie.value ? enc(cookie.value) : "";
+	if (!cookieValueRegExp.test(value)) throw new TypeError(`argument val is invalid: ${cookie.value}`);
+	if (!cookie.secure) {
+		if (cookie.partitioned) throw new TypeError(`Partitioned cookies must have the Secure attribute`);
+		if (cookie.sameSite && String(cookie.sameSite).toLowerCase() === "none") throw new TypeError(`SameSite=None cookies must have the Secure attribute`);
+		if (cookie.name.length > 9 && cookie.name.charCodeAt(0) === 95 && cookie.name.charCodeAt(1) === 95) {
+			const nameLower = cookie.name.toLowerCase();
+			if (nameLower.startsWith("__secure-") || nameLower.startsWith("__host-")) throw new TypeError(`${cookie.name} cookies must have the Secure attribute`);
+		}
+	}
+	if (cookie.name.length > 7 && cookie.name.charCodeAt(0) === 95 && cookie.name.charCodeAt(1) === 95 && cookie.name.toLowerCase().startsWith("__host-")) {
+		if (cookie.path !== "/") throw new TypeError(`__Host- cookies must have Path=/`);
+		if (cookie.domain) throw new TypeError(`__Host- cookies must not have a Domain attribute`);
+	}
+	let str = cookie.name + "=" + value;
+	if (cookie.maxAge !== void 0) {
+		if (!Number.isInteger(cookie.maxAge)) throw new TypeError(`option maxAge is invalid: ${cookie.maxAge}`);
+		str += "; Max-Age=" + Math.max(0, Math.min(cookie.maxAge, COOKIE_MAX_AGE_LIMIT));
+	}
+	if (cookie.domain) {
+		if (!domainValueRegExp.test(cookie.domain)) throw new TypeError(`option domain is invalid: ${cookie.domain}`);
+		str += "; Domain=" + cookie.domain;
+	}
+	if (cookie.path) {
+		if (!pathValueRegExp.test(cookie.path)) throw new TypeError(`option path is invalid: ${cookie.path}`);
+		str += "; Path=" + cookie.path;
+	}
+	if (cookie.expires) {
+		if (!isDate(cookie.expires) || !Number.isFinite(cookie.expires.valueOf())) throw new TypeError(`option expires is invalid: ${cookie.expires}`);
+		str += "; Expires=" + cookie.expires.toUTCString();
+	}
+	if (cookie.httpOnly) str += "; HttpOnly";
+	if (cookie.secure) str += "; Secure";
+	if (cookie.partitioned) str += "; Partitioned";
+	if (cookie.priority) switch (typeof cookie.priority === "string" ? cookie.priority.toLowerCase() : void 0) {
+		case "low":
+			str += "; Priority=Low";
+			break;
+		case "medium":
+			str += "; Priority=Medium";
+			break;
+		case "high":
+			str += "; Priority=High";
+			break;
+		default: throw new TypeError(`option priority is invalid: ${cookie.priority}`);
+	}
+	if (cookie.sameSite) switch (typeof cookie.sameSite === "string" ? cookie.sameSite.toLowerCase() : cookie.sameSite) {
+		case true:
+		case "strict":
+			str += "; SameSite=Strict";
+			break;
+		case "lax":
+			str += "; SameSite=Lax";
+			break;
+		case "none":
+			str += "; SameSite=None";
+			break;
+		default: throw new TypeError(`option sameSite is invalid: ${cookie.sameSite}`);
+	}
+	return str;
+}
+function isDate(val) {
+	return __toString.call(val) === "[object Date]";
+}
+var maxAgeRegExp = /^-?\d+$/;
+var _nullProto = /* @__PURE__ */ Object.getPrototypeOf({});
+function parseSetCookie(str, options) {
+	const len = str.length;
+	let _endIdx = len;
+	let eqIdx = -1;
+	for (let i = 0; i < len; i++) {
+		const c = str.charCodeAt(i);
+		if (c === 59) {
+			_endIdx = i;
+			break;
+		}
+		if (c === 61 && eqIdx === -1) eqIdx = i;
+	}
+	if (eqIdx >= _endIdx) eqIdx = -1;
+	const name = eqIdx === -1 ? "" : _trim(str, 0, eqIdx);
+	if (name && name in _nullProto) return void 0;
+	let value = eqIdx === -1 ? _trim(str, 0, _endIdx) : _trim(str, eqIdx + 1, _endIdx);
+	if (!name && !value) return void 0;
+	if (name.length + value.length > 4096) return void 0;
+	if (options?.decode !== false) value = _decode(value, options?.decode);
+	const setCookie = {
+		name,
+		value
+	};
+	let index = _endIdx + 1;
+	while (index < len) {
+		let endIdx = len;
+		let attrEqIdx = -1;
+		for (let i = index; i < len; i++) {
+			const c = str.charCodeAt(i);
+			if (c === 59) {
+				endIdx = i;
+				break;
+			}
+			if (c === 61 && attrEqIdx === -1) attrEqIdx = i;
+		}
+		if (attrEqIdx >= endIdx) attrEqIdx = -1;
+		const attr = attrEqIdx === -1 ? _trim(str, index, endIdx) : _trim(str, index, attrEqIdx);
+		const val = attrEqIdx === -1 ? void 0 : _trim(str, attrEqIdx + 1, endIdx);
+		if (val === void 0 || val.length <= 1024) switch (attr.toLowerCase()) {
+			case "httponly":
+				setCookie.httpOnly = true;
+				break;
+			case "secure":
+				setCookie.secure = true;
+				break;
+			case "partitioned":
+				setCookie.partitioned = true;
+				break;
+			case "domain":
+				if (val) setCookie.domain = (val.charCodeAt(0) === 46 ? val.slice(1) : val).toLowerCase();
+				break;
+			case "path":
+				setCookie.path = val;
+				break;
+			case "max-age":
+				if (val && maxAgeRegExp.test(val)) setCookie.maxAge = Math.min(Number(val), COOKIE_MAX_AGE_LIMIT);
+				break;
+			case "expires": {
+				if (!val) break;
+				const date = new Date(val);
+				if (Number.isFinite(date.valueOf())) {
+					const maxDate = new Date(Date.now() + COOKIE_MAX_AGE_LIMIT * 1e3);
+					setCookie.expires = date > maxDate ? maxDate : date;
+				}
+				break;
+			}
+			case "priority": {
+				if (!val) break;
+				const priority = val.toLowerCase();
+				if (priority === "low" || priority === "medium" || priority === "high") setCookie.priority = priority;
+				break;
+			}
+			case "samesite": {
+				if (!val) break;
+				const sameSite = val.toLowerCase();
+				if (sameSite === "lax" || sameSite === "strict" || sameSite === "none") setCookie.sameSite = sameSite;
+				else setCookie.sameSite = "lax";
+				break;
+			}
+			default: {
+				const attrLower = attr.toLowerCase();
+				if (attrLower && !(attrLower in _nullProto)) setCookie[attrLower] = val;
+			}
+		}
+		index = endIdx + 1;
+	}
+	return setCookie;
+}
+function _trim(str, start, end) {
+	if (start === end) return "";
+	let s = start;
+	let e = end;
+	while (s < e && (str.charCodeAt(s) === 32 || str.charCodeAt(s) === 9)) s++;
+	while (e > s && (str.charCodeAt(e - 1) === 32 || str.charCodeAt(e - 1) === 9)) e--;
+	return str.slice(s, e);
+}
+function _decode(value, decode) {
+	if (!decode && !value.includes("%")) return value;
+	try {
+		return (decode || decodeURIComponent)(value);
+	} catch {
+		return value;
+	}
+}
+function setCookie$1(event, name, value, options) {
+	const newCookie = serialize({
+		name,
+		value,
+		path: "/",
+		...options
+	});
+	const currentCookies = event.res.headers.getSetCookie();
+	if (currentCookies.length === 0) {
+		event.res.headers.set("set-cookie", newCookie);
+		return;
+	}
+	const newCookieKey = _getDistinctCookieKey(name, options || {});
+	event.res.headers.delete("set-cookie");
+	for (const cookie of currentCookies) {
+		const parsed = parseSetCookie(cookie);
+		if (!parsed) continue;
+		if (_getDistinctCookieKey(cookie.split("=")?.[0], parsed) === newCookieKey) continue;
+		event.res.headers.append("set-cookie", cookie);
+	}
+	event.res.headers.append("set-cookie", newCookie);
+}
+function _getDistinctCookieKey(name, options) {
+	return [
+		name,
+		options.domain || "",
+		options.path || "/"
+	].join(";");
+}
 var GLOBAL_EVENT_STORAGE_KEY = Symbol.for("tanstack-start:event-storage");
 var globalObj$1 = globalThis;
 if (!globalObj$1[GLOBAL_EVENT_STORAGE_KEY]) globalObj$1[GLOBAL_EVENT_STORAGE_KEY] = new AsyncLocalStorage();
@@ -615,6 +833,21 @@ function getH3Event() {
 	if (!event) throw new Error(`No StartEvent found in AsyncLocalStorage. Make sure you are using the function within the server runtime.`);
 	return event.h3Event;
 }
+function getRequest() {
+	return getH3Event().req;
+}
+/**
+* Set a cookie value by name.
+* @param name Name of the cookie to set
+* @param value Value of the cookie to set
+* @param options {CookieSerializeOptions} Options for serializing the cookie
+* ```ts
+* setCookie('Authorization', '1234567')
+* ```
+*/
+function setCookie(name, value, options) {
+	setCookie$1(getH3Event(), name, value, options);
+}
 function getResponse() {
 	return getH3Event().res;
 }
@@ -642,7 +875,7 @@ var rootRouteId = "__root__";
 * @returns A Response augmented with router navigation options.
 * @link https://tanstack.com/router/latest/docs/framework/react/api/router/redirectFunction
 */
-function redirect(opts) {
+function redirect$1(opts) {
 	opts.statusCode = opts.statusCode || opts.code || 307;
 	const headers = new Headers(opts.headers);
 	if (opts.href && headers.get("Location") === null) headers.set("Location", opts.href);
@@ -660,7 +893,7 @@ function isRedirect(obj) {
 }
 /** Parse a serialized redirect object back into a redirect Response. */
 function parseRedirect(obj) {
-	if (obj !== null && typeof obj === "object" && obj.isSerializedRedirect) return redirect(obj);
+	if (obj !== null && typeof obj === "object" && obj.isSerializedRedirect) return redirect$1(obj);
 }
 function dehydrateSsrMatchId(id) {
 	return id.replaceAll("~", "~~").replaceAll("\0", "~0").replaceAll("�", "~r").replaceAll("/", "\0");
@@ -3845,7 +4078,7 @@ var RawStream = class {
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-W73M7A5w.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-CmPpVBua.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -3867,59 +4100,67 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"0415884af848bd3da7e3fbe5dee23e09230c5ea32497d59bf555dcfb6458ebd9": {
 		functionName: "getLineBySlug_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"136944701bc969aa8ada70fb7ca5938c4c1975bb114752711a9c68048237076a": {
 		functionName: "listOrders_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
+	},
+	"2487fafcb0a6afff41602b0963af592618faf0b672e0218cebccca18b2f44a26": {
+		functionName: "checkStoreAccess_createServerFn_handler",
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"30e9a5bb272f8376555743636b8f80f5cf65616cb595ce50f52e9135fbdac70d": {
 		functionName: "deleteLine_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
+	},
+	"57ba7a2370dca1c25893bb8850e8d5891fd6da35c025e21fa0b618f29a2a5d25": {
+		functionName: "unlockStore_createServerFn_handler",
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"6d01fe2bca3c1a6af7afcd2612bbeff16bd5dd41b13a9a41739f3936ece00113": {
 		functionName: "getProductBySlug_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"72c96484af0296e5e44d41d7449cebf87722fa1c70237c24475e222f19f8deaf": {
 		functionName: "updateOrderStatus_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"74476a4ccb59e9866473845740bc7176a0c5cb5e8ef70634d2ac492afe62229f": {
 		functionName: "listLines_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"8b9db708be573863088f03ff45d5b88c981412c12401cf334d9fb1c2298088cd": {
 		functionName: "verifyAdminCode_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"90954bf6eb46204d3fcbe413f4732bb8c7d7db678553e104ffa92a324b365bba": {
 		functionName: "placeOrder_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"cacb72a1a3f0b961deb7ef8344fce55b23b11d48d79887d1d85340efcd1d0647": {
 		functionName: "upsertProduct_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"cd02911c6606b71ebf66b532d825c6fd9886e0069512f83b6c44e180c98f0106": {
 		functionName: "deleteProduct_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"e0173ddb81d5be896c6961860650039db1c0e5e0b8b5c52053f6db11dbc980bf": {
 		functionName: "getOrderByNumber_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"e54e178a45bc56d0642e3a07fcf18474ac75a57b706dfa7d7d5ca21b17cc8a32": {
 		functionName: "upsertLine_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"eb38f07e3c167710aaf657feadf5d6a084fd1f3213d59e5287d7c8d1169f25db": {
 		functionName: "createProductFromTemplate_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	},
 	"ff64f0e539c6dab903b2b80e19f28ffc6b2cc3685e3220f5c705a3152f375c1c": {
 		functionName: "listCatalog_createServerFn_handler",
-		importer: () => import("./store.functions-BgXlnkOn.mjs")
+		importer: () => import("./store.functions-DED96Pen.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -6557,7 +6798,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-hAw-ZWr2.mjs").then((n) => n.t),
+		import("./router-ECGtCFA4.mjs").then((n) => n.t),
 		import("./start-CsGY7HMt.mjs"),
 		import("./empty-plugin-adapters-CInA4tz9.mjs")
 	]);
@@ -6571,8 +6812,8 @@ function getEntries() {
 	if (!entriesPromise) entriesPromise = loadEntries();
 	return entriesPromise;
 }
-var ROUTER_BASEPATH = "/";
-var SERVER_FN_BASE = "/_serverFn/";
+var ROUTER_BASEPATH = "g3d-orders";
+var SERVER_FN_BASE = "/g3d-orders/_serverFn/";
 var IS_PRERENDERING = process.env.TSS_PRERENDERING === "true";
 var IS_SHELL_ENV = process.env.TSS_SHELL === "true";
 var IS_DEV = false;
@@ -7022,4 +7263,4 @@ function createServerEntry(entry) {
 }
 var server_default = createServerEntry({ fetch: fetch$1 });
 //#endregion
-export { createServerEntry, server_default as default, ssr_exports as i, TSS_SERVER_FUNCTION as n, getServerFnById as r, createServerFn as t };
+export { setCookie as a, createServerEntry, server_default as default, getRequest as i, TSS_SERVER_FUNCTION as n, ssr_exports as o, getServerFnById as r, createServerFn as t };

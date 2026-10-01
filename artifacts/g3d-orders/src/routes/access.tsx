@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { unlockStore } from "@/lib/store-access.server";
+import { unlockStore } from "@/lib/store.functions";
 
 export const Route = createFileRoute("/access")({
   validateSearch: (search: Record<string, unknown>) => ({

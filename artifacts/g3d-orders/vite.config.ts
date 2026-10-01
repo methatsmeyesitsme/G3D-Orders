@@ -41,7 +41,7 @@ export default defineConfig(async ({ command, isPreview }) => ({
     ...(command === 'build' || isPreview
       ? [
           nitro({
-            preset: 'vercel',
+            preset: 'node-server',
             serverDir: './server',
           }),
         ]

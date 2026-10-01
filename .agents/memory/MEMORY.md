@@ -1,1 +1,1 @@
-- [GitHub import permissions](github-imports.md) — cloning a public repo does not authorize app runtime writes back to it.
+- [G3D storage boundary](github-imports.md) — app-owned data stays in PostgreSQL; the public GitHub catalog is read-only seed data.

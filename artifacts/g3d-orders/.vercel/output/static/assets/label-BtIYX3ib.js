@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DcRlwftu.js";import{t}from"./utils-DL000J1v.js";var n=e();function r({className:e,...r}){return(0,n.jsx)(`label`,{className:t(`text-xs font-medium tracking-wide text-muted-foreground`,e),...r})}export{r as t};

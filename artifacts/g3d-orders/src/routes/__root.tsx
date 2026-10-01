@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppErrorComponent } from "@/lib/error-component";
-import { checkStoreAccess } from "@/lib/store-access.server";
+import { checkStoreAccess } from "@/lib/store.functions";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "G3D Orders";
