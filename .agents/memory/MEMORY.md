@@ -1,0 +1,1 @@
+- [GitHub import permissions](github-imports.md) — cloning a public repo does not authorize app runtime writes back to it.

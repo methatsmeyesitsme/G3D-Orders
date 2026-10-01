@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "G3D Orders"
+description = "A configurable storefront for G3D Squish printed lattice products, with product customization, an order flow, and shop administration."
+version = "1.0.0"
+id = "artifacts/g3d-orders"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21878
+
+[services.development]
+run = "pnpm --filter @workspace/g3d-orders run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/g3d-orders", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/g3d-orders/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21878"
+BASE_PATH = "/"

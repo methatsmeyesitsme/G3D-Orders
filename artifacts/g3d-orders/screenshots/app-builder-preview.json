@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "G3D Orders",
+      "hasCanvas": false,
+      "bodyTextLen": 84,
+      "bodyTextHash": "7340ccc90618435bdd6a66c51d2772a89d007a64ccd5f6d234a68a580655bc3d",
+      "bodyTextPrefix": "PRIVATE STUDIO G3D Orders Enter the access code to open the stor",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "G3D Orders",
+      "hasCanvas": false,
+      "bodyTextLen": 84,
+      "bodyTextHash": "7340ccc90618435bdd6a66c51d2772a89d007a64ccd5f6d234a68a580655bc3d",
+      "bodyTextPrefix": "PRIVATE STUDIO G3D Orders Enter the access code to open the stor",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

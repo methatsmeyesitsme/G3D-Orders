@@ -1,0 +1,83 @@
+name: Deploy G3D Orders to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Copy catalog into static public assets
+        run: |
+          mkdir -p public/data
+          cp data/catalog.json public/data/catalog.json
+
+      - name: Build static Pages app
+        env:
+          VITE_GITHUB_PAGES: true
+          VITE_G3D_API_URL: https://g3d-orders.vercel.app/api/g3d-orders
+        run: npx vite build -c vite.pages.config.ts
+
+      - name: Prepare Pages artifact
+        run: |
+          rm -rf pages-dist
+          mkdir pages-dist
+          if [ -d ".output/public" ]; then
+            cp -R .output/public/. pages-dist/
+          elif [ -d "dist" ]; then
+            cp -R dist/. pages-dist/
+          else
+            echo "No static build output found"
+            exit 1
+          fi
+          if [ -f pages-dist/_shell.html ]; then
+            cp pages-dist/_shell.html pages-dist/404.html
+          elif [ -f pages-dist/index.html ]; then
+            cp pages-dist/index.html pages-dist/404.html
+          else
+            echo "No index or SPA shell found"
+            exit 1
+          fi
+          touch pages-dist/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
