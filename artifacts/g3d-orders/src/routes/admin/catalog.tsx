@@ -1,6 +1,16 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminAccess } from "@/lib/admin-access-store";
@@ -24,6 +34,12 @@ function CatalogPage() {
   const [lines, setLines] = useState<ProductLine[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [newLine, setNewLine] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    kind: "line" | "product";
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function refresh() {
     const catalog = await listCatalog({ data: { adminCode } });
@@ -60,6 +76,25 @@ function CatalogPage() {
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not create line");
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.kind === "line") {
+        await deleteLine({ data: { adminCode, id: deleteTarget.id } });
+      } else {
+        await deleteProduct({ data: { adminCode, id: deleteTarget.id } });
+      }
+      toast.success(`${deleteTarget.name} deleted`);
+      setDeleteTarget(null);
+      await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete item");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -117,11 +152,13 @@ function CatalogPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={async () => {
-                      if (!window.confirm(`Remove ${line.name}?`)) return;
-                      await deleteLine({ data: { adminCode, id: line.id } });
-                      await refresh();
-                    }}
+                    onClick={() =>
+                      setDeleteTarget({
+                        kind: "line",
+                        id: line.id,
+                        name: line.name,
+                      })
+                    }
                   >
                     Delete
                   </Button>
@@ -149,13 +186,13 @@ function CatalogPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={async () => {
-                          if (!window.confirm(`Remove ${product.name}?`)) return;
-                          await deleteProduct({
-                            data: { adminCode, id: product.id },
-                          });
-                          await refresh();
-                        }}
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: "product",
+                            id: product.id,
+                            name: product.name,
+                          })
+                        }
                       >
                         Delete
                       </Button>
@@ -172,6 +209,35 @@ function CatalogPage() {
           );
         })}
       </div>
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.kind === "line"
+                ? "This permanently removes the product line and all products in it from this store."
+                : "This permanently removes the product from this store."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDelete();
+              }}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -3,6 +3,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cartTotal, useCart } from "@/lib/cart-store";
@@ -23,6 +31,10 @@ function CartPage() {
     () => items[0]?.selection.personalization ?? "",
   );
   const [busy, setBusy] = useState(false);
+  const [confirmation, setConfirmation] = useState<{
+    orderNumber: string;
+    totalCents: number;
+  } | null>(null);
   const total = cartTotal(items);
 
   async function checkout() {
@@ -51,10 +63,9 @@ function CartPage() {
         },
       });
       clear();
-      toast.success(`Order ${result.orderNumber} is in.`);
-      void navigate({
-        to: "/order/$orderNumber",
-        params: { orderNumber: result.orderNumber },
+      setConfirmation({
+        orderNumber: result.orderNumber,
+        totalCents: result.totalCents,
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place order");
@@ -142,6 +153,48 @@ function CartPage() {
           </div>
         )}
       </div>
+      <Dialog
+        open={confirmation !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmation(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order received</DialogTitle>
+            <DialogDescription>
+              Your order has been saved. Keep this order number for reference.
+            </DialogDescription>
+          </DialogHeader>
+          {confirmation ? (
+            <div className="rounded-lg bg-muted p-4">
+              <p className="text-sm text-muted-foreground">Order number</p>
+              <p className="mt-1 font-display text-xl font-semibold">
+                {confirmation.orderNumber}
+              </p>
+              <p className="mt-3 text-sm">
+                Total: {formatMoney(confirmation.totalCents)}
+              </p>
+            </div>
+          ) : null}
+          <DialogFooter>
+            {confirmation ? (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  void navigate({
+                    to: "/order/$orderNumber",
+                    params: { orderNumber: confirmation.orderNumber },
+                  })
+                }
+              >
+                View order
+              </Button>
+            ) : null}
+            <Button onClick={() => setConfirmation(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SiteShell>
   );
 }
