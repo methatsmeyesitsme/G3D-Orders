@@ -1,40 +1,81 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { MediaFrame } from "@/components/media-frame";
+import {
+  orderLines,
+  textStyleCss,
+  type HomeLayout,
+} from "@/lib/home-layout";
+import { getHomeLayout } from "@/lib/home-layout.functions";
 import { listLines, getLineBySlug } from "@/lib/store.functions";
-import { formatMoney } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const lines = await listLines();
-    const featured = lines[0]
-      ? await getLineBySlug({ data: { slug: lines[0].slug } })
+    const [lines, layout] = await Promise.all([
+      listLines(),
+      getHomeLayout().catch(() => null),
+    ]);
+    const ordered = orderLines(lines, layout?.lineOrder ?? []);
+    const featuredLine = ordered[0] ?? lines[0];
+    const featured = featuredLine
+      ? await getLineBySlug({ data: { slug: featuredLine.slug } })
       : null;
-    return { lines, featured };
+    return { lines: ordered, featured, layout: layout as HomeLayout | null };
   },
   component: Home,
 });
 
 function Home() {
-  const { lines, featured } = Route.useLoaderData();
+  const { lines, featured, layout } = Route.useLoaderData();
   const cover = featured?.line.coverGifUrl || featured?.line.coverImageUrl;
+  const L = layout;
+
+  const heroEyebrow = L?.heroEyebrow ?? "Product studio";
+  const heroTitle = L?.heroTitle ?? "Lattice you can hold.";
+  const heroBody =
+    L?.heroBody ??
+    "G3D Squish is printed to the options on the ticket. Shape, filament, yield, grain — then GO sends the same spec into G3DPG.";
+  const linesHeading = L?.linesHeading ?? "Product lines";
+  const placement = L?.heroPlacement ?? "text-left";
+  const cols = L?.linesGridCols ?? 2;
 
   return (
     <SiteShell>
-      <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:py-16">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-accent">
-            Product studio
+      <section
+        className={cn(
+          "mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:items-end lg:py-16",
+          placement === "text-right"
+            ? "lg:grid-cols-[0.9fr_1.1fr]"
+            : "lg:grid-cols-[1.1fr_0.9fr]",
+        )}
+      >
+        <div className={cn(placement === "text-right" && "lg:order-2")}>
+          <p
+            className="uppercase tracking-[0.28em] text-accent"
+            style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
+          >
+            {heroEyebrow}
           </p>
-          <h1 className="mt-4 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl">
-            Lattice you can hold.
+          <h1
+            className="mt-4 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl"
+            style={L ? textStyleCss(L.heroTitleStyle) : undefined}
+          >
+            {heroTitle}
           </h1>
-          <p className="mt-5 max-w-md text-base text-muted-foreground">
-            G3D Squish is printed to the options on the ticket. Shape, filament,
-            yield, grain — then GO sends the same spec into G3DPG.
+          <p
+            className="mt-5 max-w-md text-base text-muted-foreground"
+            style={L ? textStyleCss(L.heroBodyStyle) : undefined}
+          >
+            {heroBody}
           </p>
         </div>
-        <div className="overflow-hidden rounded-xl shadow-[var(--shadow-border)]">
+        <div
+          className={cn(
+            "overflow-hidden rounded-xl shadow-[var(--shadow-border)]",
+            placement === "text-right" && "lg:order-1",
+          )}
+        >
           {cover ? (
             <div className="aspect-[16/10] sm:aspect-[16/9]">
               <MediaFrame
@@ -49,9 +90,21 @@ function Home() {
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
         <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-2xl font-semibold">Product lines</h2>
+          <h2
+            className="font-display text-2xl font-semibold"
+            style={L ? textStyleCss(L.linesHeadingStyle) : undefined}
+          >
+            {linesHeading}
+          </h2>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div
+          className={cn(
+            "grid gap-5",
+            cols === 1 && "grid-cols-1",
+            cols === 2 && "sm:grid-cols-2",
+            cols === 3 && "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           {lines.map((line) => (
             <Link
               key={line.id}
@@ -79,7 +132,7 @@ function Home() {
         <section className="border-t border-border bg-card/50">
           <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
             <h2 className="font-display text-2xl font-semibold">
-              In {featured.line.name}
+              {L?.featuredHeadingPrefix ?? "In"} {featured.line.name}
             </h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-3">
               {featured.products.map((product) => (
