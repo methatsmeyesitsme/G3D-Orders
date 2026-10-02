@@ -20,7 +20,7 @@ export const DEFAULT_COLORS: OptionChoice[] = [
   { id: "orange", label: "Orange", hex: "#e06a2c", priceDelta: 0 },
 ];
 
-/** Soft / Medium / Hard — each step above Soft +$0.25 */
+/** Soft / Medium / Firm — Firm is +$0.50 */
 export const DEFAULT_FIRMNESS: OptionChoice[] = [
   {
     id: "soft",
@@ -35,8 +35,8 @@ export const DEFAULT_FIRMNESS: OptionChoice[] = [
     meta: { thickness: 1.5, periods: 2.5 },
   },
   {
-    id: "hard",
-    label: "Hard",
+    id: "firm",
+    label: "Firm",
     priceDelta: 50,
     meta: { thickness: 2.4, periods: 3.0 },
   },
