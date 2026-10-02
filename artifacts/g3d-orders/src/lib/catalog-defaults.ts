@@ -17,13 +17,8 @@ export const DEFAULT_COLORS: OptionChoice[] = [
   { id: "orange", label: "Orange", hex: "#e06a2c", priceDelta: 0 },
 ];
 
+/** Soft / Medium / Hard yield for the order form. */
 export const DEFAULT_FIRMNESS: OptionChoice[] = [
-  {
-    id: "super-soft",
-    label: "Super Soft",
-    priceDelta: 0,
-    meta: { thickness: 0.8, periods: 2.0 },
-  },
   {
     id: "soft",
     label: "Soft",
@@ -37,42 +32,31 @@ export const DEFAULT_FIRMNESS: OptionChoice[] = [
     meta: { thickness: 1.5, periods: 2.5 },
   },
   {
-    id: "firm",
-    label: "Firm",
-    priceDelta: 300,
-    meta: { thickness: 2.1, periods: 2.8 },
-  },
-  {
-    id: "super-firm",
-    label: "Super Firm",
-    priceDelta: 500,
-    meta: { thickness: 2.8, periods: 3.2 },
+    id: "hard",
+    label: "Hard",
+    priceDelta: 400,
+    meta: { thickness: 2.4, periods: 3.0 },
   },
 ];
 
+/** Low / Medium / Max surface texture for the order form. */
 export const DEFAULT_TEXTURE: OptionChoice[] = [
   {
-    id: "none",
-    label: "Smooth",
+    id: "low",
+    label: "Low",
     priceDelta: 0,
-    meta: { toggle: false, amount: 0 },
-  },
-  {
-    id: "light",
-    label: "Light grain",
-    priceDelta: 100,
     meta: { toggle: true, amount: 25 },
   },
   {
-    id: "moderate",
-    label: "Moderate",
-    priceDelta: 200,
+    id: "medium",
+    label: "Medium",
+    priceDelta: 150,
     meta: { toggle: true, amount: 50 },
   },
   {
-    id: "heavy",
-    label: "Heavy grain",
-    priceDelta: 400,
-    meta: { toggle: true, amount: 85 },
+    id: "max",
+    label: "Max",
+    priceDelta: 300,
+    meta: { toggle: true, amount: 90 },
   },
 ];
