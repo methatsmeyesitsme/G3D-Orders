@@ -52,9 +52,10 @@
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
@@ -98,9 +99,10 @@
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 35,
@@ -143,9 +145,10 @@
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
