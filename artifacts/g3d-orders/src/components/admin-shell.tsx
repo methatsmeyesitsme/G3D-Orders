@@ -3,10 +3,15 @@ import type { ReactNode } from "react";
 import { Wordmark } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
-const LINKS: { to: "/admin" | "/admin/orders" | "/admin/catalog"; label: string; exact?: boolean }[] = [
+const LINKS: {
+  to: "/admin" | "/admin/orders" | "/admin/catalog" | "/admin/preview";
+  label: string;
+  exact?: boolean;
+}[] = [
   { to: "/admin", label: "Desk", exact: true },
   { to: "/admin/orders", label: "Orders" },
   { to: "/admin/catalog", label: "Catalog" },
+  { to: "/admin/preview", label: "Preview" },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -17,7 +22,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <Link to="/admin">
             <Wordmark subtitle="Admin" />
           </Link>
-          <nav className="flex gap-1">
+          <nav className="flex flex-wrap gap-1">
             {LINKS.map((link) => (
               <Link
                 key={link.to}
