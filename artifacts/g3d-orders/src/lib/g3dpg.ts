@@ -39,10 +39,21 @@ export function g3dpgDirectUrl(cfg: G3dpgConfig) {
   return `${G3DPG_ORIGIN}?${buildG3dpgSearch(cfg).toString()}`;
 }
 
+/** Open G3DPG in a new tab only — never navigate away from the current page. */
 export function openG3dpg(cfg: G3dpgConfig) {
   const studio = g3dpgDirectUrl(cfg);
   const opened = window.open(studio, "_blank", "noopener,noreferrer");
-  if (!opened) {
-    window.location.assign(studio);
+  if (opened) {
+    opened.opener = null;
+    return;
   }
+  // Popup blocked: use a temporary <a target="_blank"> click (still new tab).
+  const anchor = document.createElement("a");
+  anchor.href = studio;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }
