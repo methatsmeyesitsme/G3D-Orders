@@ -1,4 +1,10 @@
-import { DEFAULT_COLORS, DEFAULT_FIRMNESS, DEFAULT_SHAPES, DEFAULT_TEXTURE } from "@/lib/catalog-defaults";
+import {
+  BASE_SHAPE_PRICE_CENTS,
+  DEFAULT_COLORS,
+  DEFAULT_FIRMNESS,
+  DEFAULT_SHAPES,
+  DEFAULT_TEXTURE,
+} from "@/lib/catalog-defaults";
 import type {
   G3dpgConfig,
   Order,
@@ -32,11 +38,39 @@ async function apiCall<T>(action: string, data: unknown): Promise<T> {
   }
   return body.data as T;
 }
-const CATALOG_KEY = "g3d-orders-pages-catalog-v1";
+
+// Bumped so browsers drop old cached catalogs with +$2/+ $4 firmness deltas.
+const CATALOG_KEY = "g3d-orders-pages-catalog-v3";
 let catalogPromise: Promise<Catalog> | null = null;
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function firmnessPriceDelta(id: string, label: string): number {
+  const key = `${id} ${label}`.toLowerCase();
+  if (key.includes("hard")) return 50;
+  if (key.includes("medium") || key.includes("med ")) return 25;
+  return 0; // soft / super soft
+}
+
+function normalizeCatalogPricing(catalog: Catalog): Catalog {
+  return {
+    ...catalog,
+    products: catalog.products.map((product) => ({
+      ...product,
+      shapes: product.shapes.map((s) => ({ ...s, priceDelta: 0 })),
+      colors: product.colors.map((c) => ({ ...c, priceDelta: 0 })),
+      firmnessOptions: product.firmnessOptions.map((f) => ({
+        ...f,
+        priceDelta: firmnessPriceDelta(f.id, f.label),
+      })),
+      textureOptions: product.textureOptions.map((t) => ({
+        ...t,
+        priceDelta: 0,
+      })),
+    })),
+  };
 }
 
 function sortLines(lines: ProductLine[]) {
@@ -68,34 +102,28 @@ async function loadInitialCatalog(): Promise<Catalog> {
     return { lines: [], products: [] };
   }
 
-  const saved = window.localStorage.getItem(CATALOG_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved) as Catalog;
-    } catch {
-      window.localStorage.removeItem(CATALOG_KEY);
-    }
-  }
-
   const response = await fetch(`${import.meta.env.BASE_URL}data/catalog.json`, {
     cache: "no-store",
   });
   if (!response.ok) {
     throw new Error(`Could not load catalog (${response.status}).`);
   }
-  const catalog = (await response.json()) as Catalog;
+  const catalog = normalizeCatalogPricing((await response.json()) as Catalog);
   window.localStorage.setItem(CATALOG_KEY, JSON.stringify(catalog));
+  // Drop older cache keys so stale +$2 firmness never sticks around.
+  window.localStorage.removeItem("g3d-orders-pages-catalog-v1");
+  window.localStorage.removeItem("g3d-orders-pages-catalog-v2");
   return catalog;
 }
 
 async function readCatalog(): Promise<Catalog> {
   catalogPromise ??= loadInitialCatalog();
-  return clone(await catalogPromise);
+  return normalizeCatalogPricing(clone(await catalogPromise));
 }
 
 async function writeCatalog(catalog: Catalog): Promise<void> {
   if (typeof window === "undefined") return;
-  const next = clone(catalog);
+  const next = normalizeCatalogPricing(clone(catalog));
   window.localStorage.setItem(CATALOG_KEY, JSON.stringify(next));
   catalogPromise = Promise.resolve(next);
 }
@@ -142,15 +170,6 @@ export async function getProductBySlug({
       item.active,
   );
   return product ? mapProduct(product, line) : null;
-}
-
-function makeOrderNumber(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let suffix = "";
-  for (let i = 0; i < 6; i++) {
-    suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return `G3D-${suffix}`;
 }
 
 export async function placeOrder({
@@ -312,11 +331,14 @@ export async function upsertProduct({
     gifUrl: data.gifUrl,
     videoUrl: data.videoUrl,
     gallery: data.gallery,
-    shapes: data.shapes,
-    colors: data.colors,
-    firmnessOptions: data.firmnessOptions,
+    shapes: data.shapes.map((s) => ({ ...s, priceDelta: 0 })),
+    colors: data.colors.map((c) => ({ ...c, priceDelta: 0 })),
+    firmnessOptions: data.firmnessOptions.map((f) => ({
+      ...f,
+      priceDelta: firmnessPriceDelta(f.id, f.label),
+    })),
     textureEnabled: data.textureEnabled,
-    textureOptions: data.textureOptions,
+    textureOptions: data.textureOptions.map((t) => ({ ...t, priceDelta: 0 })),
     infillPattern: data.infillPattern,
     sizeMm: data.sizeMm,
     extraSettings: data.extraSettings,
@@ -366,7 +388,7 @@ export async function createProductFromTemplate({
         .slice(0, 48) || "product",
     name: data.name.trim(),
     description: "",
-    basePriceCents: 2500,
+    basePriceCents: BASE_SHAPE_PRICE_CENTS,
     imageUrl: "",
     gifUrl: "",
     videoUrl: "",
