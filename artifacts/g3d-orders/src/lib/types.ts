@@ -148,6 +148,8 @@ export type Order = {
   totalCents: number;
   notes: string;
   createdAt: string;
+  /** ISO timestamp set when status becomes completed */
+  completedAt?: string;
   items: OrderItem[];
 };
 
