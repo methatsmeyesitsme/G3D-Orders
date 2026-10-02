@@ -18,7 +18,7 @@
       "slug": "classic",
       "name": "Classic Squish",
       "description": "The original G3D Squish. A palm-sized gyroid body with rounded volume, printed as a single lattice so it flexes evenly in the hand. Customize the silhouette, filament, yield, and surface grain. Name is embossed into the G3DPG file so the print job matches the order.",
-      "basePriceCents": 2800,
+      "basePriceCents": 200,
       "imageUrl": "/products/gumdrop.jpg",
       "gifUrl": "/products/squish-flex.gif",
       "videoUrl": "/products/squish-flex.mp4",
@@ -34,8 +34,8 @@
         { "id": "gumdrop", "label": "Gumdrop", "priceDelta": 0, "g3dpgValue": "gumdrop" },
         { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" },
         { "id": "sphere", "label": "Ball / Sphere", "priceDelta": 0, "g3dpgValue": "sphere" },
-        { "id": "cylinder", "label": "Cylinder", "priceDelta": 200, "g3dpgValue": "cylinder" },
-        { "id": "ring", "label": "Ring / Torus", "priceDelta": 400, "g3dpgValue": "ring" }
+        { "id": "cylinder", "label": "Cylinder", "priceDelta": 0, "g3dpgValue": "cylinder" },
+        { "id": "ring", "label": "Ring / Torus", "priceDelta": 0, "g3dpgValue": "ring" }
       ],
       "colors": [
         { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
@@ -53,9 +53,9 @@
       "textureEnabled": true,
       "textureOptions": [
         { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
-        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
@@ -69,7 +69,7 @@
       "slug": "pocket",
       "name": "Pocket Squish",
       "description": "A smaller gyroid body for a pocket or bag. Same color, firmness, and grain controls as Classic, scaled to 35mm. Prints faster, still a full G3DPG job.",
-      "basePriceCents": 1800,
+      "basePriceCents": 200,
       "imageUrl": "/products/sphere.jpg",
       "gifUrl": "/products/squish-flex.gif",
       "videoUrl": "/products/squish-flex.mp4",
@@ -100,9 +100,9 @@
       "textureEnabled": true,
       "textureOptions": [
         { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
-        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 35,
@@ -116,7 +116,7 @@
       "slug": "ring",
       "name": "Ring Squish",
       "description": "A torus printed as a continuous gyroid. Fingers find the hole; the lattice still yields. Built around the Ring / Torus toolpath in G3DPG, with the rest of the Squish palette available.",
-      "basePriceCents": 3200,
+      "basePriceCents": 200,
       "imageUrl": "/products/ring.jpg",
       "gifUrl": "",
       "videoUrl": "",
@@ -128,7 +128,7 @@
       "shapes": [
         { "id": "ring", "label": "Ring / Torus", "priceDelta": 0, "g3dpgValue": "ring" },
         { "id": "cylinder", "label": "Cylinder", "priceDelta": 0, "g3dpgValue": "cylinder" },
-        { "id": "cube", "label": "Square / Cube", "priceDelta": 200, "g3dpgValue": "cube" }
+        { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" }
       ],
       "colors": [
         { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
@@ -146,9 +146,9 @@
       "textureEnabled": true,
       "textureOptions": [
         { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
-        { "id": "little", "label": "Little", "priceDelta": 25, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 50, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 75, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
