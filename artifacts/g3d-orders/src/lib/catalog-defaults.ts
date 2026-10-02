@@ -39,24 +39,30 @@ export const DEFAULT_FIRMNESS: OptionChoice[] = [
   },
 ];
 
-/** Little / Medium / Max — each step +$0.25 */
+/** None / Little / Medium / Max — each step above None +$0.25 */
 export const DEFAULT_TEXTURE: OptionChoice[] = [
+  {
+    id: "none",
+    label: "None",
+    priceDelta: 0,
+    meta: { toggle: false, amount: 0 },
+  },
   {
     id: "little",
     label: "Little",
-    priceDelta: 0,
+    priceDelta: 25,
     meta: { toggle: true, amount: 25 },
   },
   {
     id: "medium",
     label: "Medium",
-    priceDelta: 25,
+    priceDelta: 50,
     meta: { toggle: true, amount: 50 },
   },
   {
     id: "max",
     label: "Max",
-    priceDelta: 50,
+    priceDelta: 75,
     meta: { toggle: true, amount: 90 },
   },
 ];
