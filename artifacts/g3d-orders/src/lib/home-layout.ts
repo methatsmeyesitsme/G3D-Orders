@@ -20,6 +20,15 @@ export type LayoutPositions = {
   lines: Record<string, LayoutPos>;
 };
 
+/** Keys that can be hidden from the storefront (and preview). */
+export type LayoutElementKey =
+  | "heroEyebrow"
+  | "heroTitle"
+  | "heroBody"
+  | "heroMedia"
+  | "linesHeading"
+  | `line:${string}`;
+
 export type HomeLayout = {
   version: 1;
   heroEyebrow: string;
@@ -39,6 +48,8 @@ export type HomeLayout = {
   /** When true, text and product cards use free absolute positions. */
   freeLayout: boolean;
   positions: LayoutPositions;
+  /** Element keys removed via Preview delete (restored by Reset / Undo). */
+  hiddenElements: string[];
 };
 
 export const DEFAULT_POSITIONS: LayoutPositions = {
@@ -87,6 +98,7 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   linesGridCols: 2,
   freeLayout: false,
   positions: { ...DEFAULT_POSITIONS, lines: {} },
+  hiddenElements: [],
 };
 
 export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayout {
@@ -94,6 +106,7 @@ export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayou
     return {
       ...DEFAULT_HOME_LAYOUT,
       positions: { ...DEFAULT_POSITIONS, lines: {} },
+      hiddenElements: [],
     };
   }
   const positionsIn = partial.positions;
@@ -129,7 +142,14 @@ export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayou
       linesHeading: positionsIn?.linesHeading ?? null,
       lines: { ...(positionsIn?.lines || {}) },
     },
+    hiddenElements: Array.isArray(partial.hiddenElements)
+      ? [...partial.hiddenElements]
+      : [],
   };
+}
+
+export function isHidden(layout: HomeLayout, key: string): boolean {
+  return layout.hiddenElements.includes(key);
 }
 
 export function textStyleCss(style: TextStyle): Record<string, string | number | undefined> {

@@ -50,6 +50,7 @@ const homeLayoutSchema = z.object({
   linesGridCols: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   freeLayout: z.boolean(),
   positions: positionsSchema,
+  hiddenElements: z.array(z.string()),
 });
 
 function assertAdmin(code: string) {
