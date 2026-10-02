@@ -1,11 +1,14 @@
 import type { OptionChoice } from "@/lib/types";
 
+/** Base price for any shape (cents). Firmness adds on top. */
+export const BASE_SHAPE_PRICE_CENTS = 200;
+
 export const DEFAULT_SHAPES: OptionChoice[] = [
   { id: "gumdrop", label: "Gumdrop", priceDelta: 0, g3dpgValue: "gumdrop" },
   { id: "cube", label: "Square / Cube", priceDelta: 0, g3dpgValue: "cube" },
   { id: "sphere", label: "Ball / Sphere", priceDelta: 0, g3dpgValue: "sphere" },
-  { id: "cylinder", label: "Cylinder", priceDelta: 200, g3dpgValue: "cylinder" },
-  { id: "ring", label: "Ring / Torus", priceDelta: 400, g3dpgValue: "ring" },
+  { id: "cylinder", label: "Cylinder", priceDelta: 0, g3dpgValue: "cylinder" },
+  { id: "ring", label: "Ring / Torus", priceDelta: 0, g3dpgValue: "ring" },
 ];
 
 export const DEFAULT_COLORS: OptionChoice[] = [
@@ -17,7 +20,7 @@ export const DEFAULT_COLORS: OptionChoice[] = [
   { id: "orange", label: "Orange", hex: "#e06a2c", priceDelta: 0 },
 ];
 
-/** Soft / Medium / Hard — each step +$0.25 */
+/** Soft / Medium / Hard — each step above Soft +$0.25 */
 export const DEFAULT_FIRMNESS: OptionChoice[] = [
   {
     id: "soft",
