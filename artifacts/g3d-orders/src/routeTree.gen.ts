@@ -25,6 +25,7 @@ import { Route as OrderOrderNumberRouteImport } from './routes/order.$orderNumbe
 import { Route as AdminLineIdRouteImport } from './routes/admin/line.$id'
 import { Route as AdminProductIdRouteImport } from './routes/admin/product.$id'
 import { Route as LineSlugPProductSlugRouteImport } from './routes/line.$slug.p.$productSlug'
+import { Route as PProductSlugRouteImport } from './routes/p.$productSlug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -91,6 +92,11 @@ const OrderOrderNumberRoute = OrderOrderNumberRouteImport.update({
   path: '/order/$orderNumber',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PProductSlugRoute = PProductSlugRouteImport.update({
+  id: '/p/$productSlug',
+  path: '/p/$productSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLineIdRoute = AdminLineIdRouteImport.update({
   id: '/line/$id',
   path: '/line/$id',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
+  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
+  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
+  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
+    | '/p/$productSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
+    | '/p/$productSlug'
   id:
     | '__root__'
     | '/'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
+    | '/p/$productSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   LineSlugRoute: typeof LineSlugRouteWithChildren
   OrderOrderNumberRoute: typeof OrderOrderNumberRoute
   G3dpgAppIndexRoute: typeof G3dpgAppIndexRoute
+  PProductSlugRoute: typeof PProductSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -342,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LineSlugPProductSlugRouteImport
       parentRoute: typeof LineSlugRoute
     }
+    '/p/$productSlug': {
+      id: '/p/$productSlug'
+      path: '/p/$productSlug'
+      fullPath: '/p/$productSlug'
+      preLoaderRoute: typeof PProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -388,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   LineSlugRoute: LineSlugRouteWithChildren,
   OrderOrderNumberRoute: OrderOrderNumberRoute,
   G3dpgAppIndexRoute: G3dpgAppIndexRoute,
+  PProductSlugRoute: PProductSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
