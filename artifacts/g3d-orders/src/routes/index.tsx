@@ -3,6 +3,7 @@ import { SiteShell } from "@/components/site-shell";
 import { MediaFrame } from "@/components/media-frame";
 import {
   orderLines,
+  posStyle,
   textStyleCss,
   type HomeLayout,
 } from "@/lib/home-layout";
@@ -30,6 +31,7 @@ function Home() {
   const { lines, featured, layout } = Route.useLoaderData();
   const cover = featured?.line.coverGifUrl || featured?.line.coverImageUrl;
   const L = layout;
+  const free = Boolean(L?.freeLayout);
 
   const heroEyebrow = L?.heroEyebrow ?? "Product studio";
   const heroTitle = L?.heroTitle ?? "Lattice you can hold.";
@@ -39,6 +41,92 @@ function Home() {
   const linesHeading = L?.linesHeading ?? "Product lines";
   const placement = L?.heroPlacement ?? "text-left";
   const cols = L?.linesGridCols ?? 2;
+  const p = L?.positions;
+
+  if (free && p) {
+    return (
+      <SiteShell>
+        <div className="relative mx-auto min-h-[720px] w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
+          <div
+            className="max-w-[42%]"
+            style={posStyle(p.heroEyebrow ?? { x: 4, y: 4 })}
+          >
+            <p
+              className="uppercase tracking-[0.28em] text-accent"
+              style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
+            >
+              {heroEyebrow}
+            </p>
+          </div>
+          <div
+            className="max-w-[42%]"
+            style={posStyle(p.heroTitle ?? { x: 4, y: 10 })}
+          >
+            <h1
+              className="leading-[1.05]"
+              style={L ? textStyleCss(L.heroTitleStyle) : undefined}
+            >
+              {heroTitle}
+            </h1>
+          </div>
+          <div
+            className="max-w-[42%]"
+            style={posStyle(p.heroBody ?? { x: 4, y: 28 })}
+          >
+            <p
+              className="text-muted-foreground"
+              style={L ? textStyleCss(L.heroBodyStyle) : undefined}
+            >
+              {heroBody}
+            </p>
+          </div>
+          <div
+            className="w-[42%] overflow-hidden rounded-xl shadow-[var(--shadow-border)]"
+            style={posStyle(p.heroMedia ?? { x: 52, y: 4 })}
+          >
+            {cover ? (
+              <div className="aspect-[16/10]">
+                <MediaFrame
+                  src={cover}
+                  kind={featured?.line.coverGifUrl ? "gif" : "image"}
+                  alt="G3D Squish"
+                />
+              </div>
+            ) : null}
+          </div>
+          <div style={posStyle(p.linesHeading ?? { x: 4, y: 48 })}>
+            <h2 style={L ? textStyleCss(L.linesHeadingStyle) : undefined}>
+              {linesHeading}
+            </h2>
+          </div>
+          {lines.map((line, idx) => {
+            const col = idx % 2;
+            const row = Math.floor(idx / 2);
+            const fallback = { x: 4 + col * 48, y: 56 + row * 22 };
+            return (
+              <Link
+                key={line.id}
+                to="/line/$slug"
+                params={{ slug: line.slug }}
+                className="w-[44%] overflow-hidden rounded-xl bg-card shadow-[var(--shadow-border)]"
+                style={posStyle(p.lines[line.id] ?? fallback)}
+              >
+                <div className="aspect-[16/10] overflow-hidden bg-paper">
+                  <MediaFrame src={line.coverImageUrl} alt={line.name} />
+                </div>
+                <div className="space-y-1 p-4">
+                  <p className="font-display text-lg font-semibold">
+                    {line.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{line.tagline}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </SiteShell>
+    );
+  }
 
   return (
     <SiteShell>
