@@ -41,33 +41,51 @@ async function ghJson<T>(path:string, init?:RequestInit):Promise<T> {
 function decodeGithubContent(content:string) { return Buffer.from(content.replace(/\s/g,""),"base64").toString("utf8"); }
 async function getGithubFile(path:string) { return ghJson<{content:string;sha:string}>(`/contents/${path}?ref=${encodeURIComponent(GH_BRANCH)}`); }
 
-function normalizeOptionDeltas(list: { id: string; label: string; priceDelta: number; [k: string]: unknown }[], kind: "firmness" | "texture" | "other") {
+function firmnessPriceDelta(id: string, label: string): number {
+  const key = `${id} ${label}`.toLowerCase();
+  if (key.includes("hard")) return 50;
+  if (key.includes("medium") || key.includes("med ")) return 25;
+  // soft, super soft, and anything else
+  return 0;
+}
+
+function normalizeOptionDeltas(
+  list: Array<{ id: string; label: string; priceDelta: number; [k: string]: unknown }>,
+  kind: "firmness" | "texture" | "other",
+) {
   return list.map((item) => {
     if (kind === "texture") return { ...item, priceDelta: 0 };
     if (kind === "firmness") {
-      const id = (item.id || "").toLowerCase();
-      const label = (item.label || "").toLowerCase();
-      let priceDelta = 0;
-      if (id === "medium" || label.includes("medium")) priceDelta = 25;
-      else if (id === "hard" || label.includes("hard")) priceDelta = 50;
-      else priceDelta = 0; // soft / super soft
-      return { ...item, priceDelta };
+      return {
+        ...item,
+        priceDelta: firmnessPriceDelta(item.id || "", item.label || ""),
+      };
     }
     return { ...item, priceDelta: 0 };
   });
 }
 
-/** Keep storefront pricing fixed: $2 base + firmness only. Ignores stale DB values. */
+/**
+ * Fix stale option surcharges from old catalog data.
+ * Base price stays whatever the product was saved with.
+ * Firmness: soft/super soft +$0, medium +$0.25, hard +$0.50.
+ * Texture: always free.
+ */
 function normalizeCatalogPricing(catalog: Catalog): Catalog {
   return {
     ...catalog,
     products: catalog.products.map((product) => ({
       ...product,
-      basePriceCents: BASE_SHAPE_PRICE_CENTS,
       shapes: product.shapes.map((s) => ({ ...s, priceDelta: 0 })),
       colors: product.colors.map((c) => ({ ...c, priceDelta: 0 })),
-      firmnessOptions: normalizeOptionDeltas(product.firmnessOptions as any, "firmness") as typeof product.firmnessOptions,
-      textureOptions: normalizeOptionDeltas(product.textureOptions as any, "texture") as typeof product.textureOptions,
+      firmnessOptions: normalizeOptionDeltas(
+        product.firmnessOptions as any,
+        "firmness",
+      ) as typeof product.firmnessOptions,
+      textureOptions: normalizeOptionDeltas(
+        product.textureOptions as any,
+        "texture",
+      ) as typeof product.textureOptions,
     })),
   };
 }
@@ -90,11 +108,12 @@ async function readCatalog():Promise<Catalog> {
   return normalizeCatalogPricing(catalog);
 }
 async function writeCatalog(catalog:Catalog,_message:string) {
+  const normalized = normalizeCatalogPricing(catalog);
   await db.insert(g3dCatalogState)
-    .values({ id: "primary", catalog })
+    .values({ id: "primary", catalog: normalized })
     .onConflictDoUpdate({
       target: g3dCatalogState.id,
-      set: { catalog, updatedAt: new Date() },
+      set: { catalog: normalized, updatedAt: new Date() },
     });
 }
 async function nextOrderNumber() {
@@ -204,7 +223,7 @@ export const upsertProduct=createServerFn({method:"POST"}).validator(z.object({
   imageUrl:z.string().max(400000),gifUrl:z.string().max(400000),videoUrl:z.string().max(400000),gallery:z.array(gallerySchema),shapes:z.array(optionSchema),colors:z.array(optionSchema),firmnessOptions:z.array(optionSchema),textureEnabled:z.boolean(),textureOptions:z.array(optionSchema),
   infillPattern:z.string().min(1).max(40),sizeMm:z.number().int().min(8).max(400),extraSettings:extraSchema,active:z.boolean(),sortOrder:z.number().int()
 })).handler(async({data})=>{
-  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId,slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:BASE_SHAPE_PRICE_CENTS,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes.map(s=>({...s,priceDelta:0})),colors:data.colors.map(c=>({...c,priceDelta:0})),firmnessOptions:normalizeOptionDeltas(data.firmnessOptions as any,"firmness") as typeof data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:normalizeOptionDeltas(data.textureOptions as any,"texture") as typeof data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
+  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId,slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:data.basePriceCents,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes.map(s=>({...s,priceDelta:0})),colors:data.colors.map(c=>({...c,priceDelta:0})),firmnessOptions:normalizeOptionDeltas(data.firmnessOptions as any,"firmness") as typeof data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:normalizeOptionDeltas(data.textureOptions as any,"texture") as typeof data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
   await writeCatalog({...c,products:[...c.products.filter(p=>p.id!==id),product]},`Update product ${product.name}`); return {id,slug:product.slug};
 });
 export const deleteProduct=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),id:z.string()})).handler(async({data})=>{
