@@ -22,23 +22,24 @@ export function SquishPreview({
   const shape = findChoice(product.shapes, selection.shape);
   const color = findChoice(product.colors, selection.color);
   const firmness = findChoice(product.firmnessOptions, selection.firmness);
-  const hex = color?.hex ?? "#f4f1ea";
+  // Always use the product / shape photo — never swap or tint by selected color.
   const photo =
-    color?.imageUrl ||
-    SHAPE_IMAGES[shape?.g3dpgValue || shape?.id || ""] ||
-    product.imageUrl;
+    SHAPE_IMAGES[shape?.g3dpgValue || shape?.id || ""] || product.imageUrl;
   const firmIndex = Math.max(
     0,
     product.firmnessOptions.findIndex((item) => item.id === firmness?.id),
   );
   const squish = 1 - firmIndex * 0.035;
+  const textureId = selection.texture || "";
   const grain =
-    product.textureEnabled && selection.texture && selection.texture !== "none"
-      ? selection.texture === "heavy"
+    product.textureEnabled && textureId
+      ? textureId === "max" || textureId === "heavy"
         ? 0.42
-        : selection.texture === "moderate"
+        : textureId === "medium" || textureId === "moderate"
           ? 0.28
-          : 0.16
+          : textureId === "little" || textureId === "low" || textureId === "light"
+            ? 0.16
+            : 0
       : 0;
 
   return (
@@ -57,12 +58,6 @@ export function SquishPreview({
           alt={`${product.name} ${shape?.label ?? ""}`}
           className="h-full w-full object-cover"
         />
-        {color?.id && color.id !== "white" ? (
-          <div
-            className="pointer-events-none absolute inset-0 mix-blend-multiply"
-            style={{ background: hex, opacity: color.id === "black" ? 0.55 : 0.38 }}
-          />
-        ) : null}
         {grain > 0 ? (
           <div
             className="pointer-events-none absolute inset-0 mix-blend-overlay"
