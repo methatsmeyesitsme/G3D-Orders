@@ -85,6 +85,13 @@ export type CartItem = {
   lineName: string;
   imageUrl: string;
   selection: Selection;
+  /** Human-readable labels for cart / admin order display */
+  labels: {
+    shape: string;
+    color: string;
+    firmness: string;
+    texture: string;
+  };
   unitPriceCents: number;
   g3dpg: G3dpgConfig;
 };
