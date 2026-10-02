@@ -17,7 +17,7 @@ export const DEFAULT_COLORS: OptionChoice[] = [
   { id: "orange", label: "Orange", hex: "#e06a2c", priceDelta: 0 },
 ];
 
-/** Soft / Medium / Hard yield for the order form. */
+/** Soft / Medium / Hard — each step +$0.25 */
 export const DEFAULT_FIRMNESS: OptionChoice[] = [
   {
     id: "soft",
@@ -28,35 +28,35 @@ export const DEFAULT_FIRMNESS: OptionChoice[] = [
   {
     id: "medium",
     label: "Medium",
-    priceDelta: 200,
+    priceDelta: 25,
     meta: { thickness: 1.5, periods: 2.5 },
   },
   {
     id: "hard",
     label: "Hard",
-    priceDelta: 400,
+    priceDelta: 50,
     meta: { thickness: 2.4, periods: 3.0 },
   },
 ];
 
-/** Low / Medium / Max surface texture for the order form. */
+/** Little / Medium / Max — each step +$0.25 */
 export const DEFAULT_TEXTURE: OptionChoice[] = [
   {
-    id: "low",
-    label: "Low",
+    id: "little",
+    label: "Little",
     priceDelta: 0,
     meta: { toggle: true, amount: 25 },
   },
   {
     id: "medium",
     label: "Medium",
-    priceDelta: 150,
+    priceDelta: 25,
     meta: { toggle: true, amount: 50 },
   },
   {
     id: "max",
     label: "Max",
-    priceDelta: 300,
+    priceDelta: 50,
     meta: { toggle: true, amount: 90 },
   },
 ];
