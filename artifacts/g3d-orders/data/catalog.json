@@ -1,1 +1,160 @@
-REPLACE_CAT
+{
+  "lines": [
+    {
+      "id": "line_g3d_squish",
+      "slug": "g3d-squish",
+      "name": "G3D Squish",
+      "tagline": "Lattice you can press.",
+      "description": "Printed gyroid structures with a closed outer skin. Choose the form, filament color, how far it yields, and how much grain sits on the surface. Every Squish is generated in G3DPG from the exact options on the order.",
+      "coverImageUrl": "/products/line-squish.jpg",
+      "coverGifUrl": "/products/squish-flex.gif",
+      "sortOrder": 0
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_classic_squish",
+      "lineId": "line_g3d_squish",
+      "slug": "classic",
+      "name": "Classic Squish",
+      "description": "The original G3D Squish. A palm-sized gyroid body with rounded volume, printed as a single lattice so it flexes evenly in the hand. Customize the silhouette, filament, yield, and surface grain. Name is embossed into the G3DPG file so the print job matches the order.",
+      "basePriceCents": 200,
+      "imageUrl": "/products/gumdrop.jpg",
+      "gifUrl": "/products/squish-flex.gif",
+      "videoUrl": "/products/squish-flex.mp4",
+      "gallery": [
+        { "url": "/products/gumdrop.jpg", "kind": "image", "alt": "Classic Squish gumdrop" },
+        { "url": "/products/squish-flex.gif", "kind": "gif", "alt": "Squish flex" },
+        { "url": "/products/squish-flex.mp4", "kind": "video", "alt": "Squish in hand" },
+        { "url": "/products/cube.jpg", "kind": "image", "alt": "Cube form" },
+        { "url": "/products/sphere.jpg", "kind": "image", "alt": "Sphere form" },
+        { "url": "/products/macro.jpg", "kind": "image", "alt": "Gyroid close-up" }
+      ],
+      "shapes": [
+        { "id": "gumdrop", "label": "Gumdrop", "priceDelta": 0, "g3dpgValue": "gumdrop" },
+        { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" },
+        { "id": "sphere", "label": "Ball / Sphere", "priceDelta": 0, "g3dpgValue": "sphere" },
+        { "id": "cylinder", "label": "Cylinder", "priceDelta": 0, "g3dpgValue": "cylinder" },
+        { "id": "ring", "label": "Ring / Torus", "priceDelta": 0, "g3dpgValue": "ring" }
+      ],
+      "colors": [
+        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
+        { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
+        { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
+        { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
+        { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
+      ],
+      "firmnessOptions": [
+        { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "firm", "label": "Firm", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
+      ],
+      "textureEnabled": true,
+      "textureOptions": [
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
+      ],
+      "infillPattern": "gyroid",
+      "sizeMm": 50,
+      "extraSettings": { "quality": "192", "rounded": true, "cornerRadius": 5 },
+      "active": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "prod_pocket_squish",
+      "lineId": "line_g3d_squish",
+      "slug": "pocket",
+      "name": "Pocket Squish",
+      "description": "A smaller gyroid body for a pocket or bag. Same color, firmness, and grain controls as Classic, scaled to 35mm. Prints faster, still a full G3DPG job.",
+      "basePriceCents": 200,
+      "imageUrl": "/products/sphere.jpg",
+      "gifUrl": "/products/squish-flex.gif",
+      "videoUrl": "/products/squish-flex.mp4",
+      "gallery": [
+        { "url": "/products/sphere.jpg", "kind": "image", "alt": "Pocket Squish" },
+        { "url": "/products/sphere-black.jpg", "kind": "image", "alt": "Black sphere" },
+        { "url": "/products/squish-flex.gif", "kind": "gif", "alt": "Flex" },
+        { "url": "/products/macro.jpg", "kind": "image", "alt": "Lattice" }
+      ],
+      "shapes": [
+        { "id": "sphere", "label": "Ball / Sphere", "priceDelta": 0, "g3dpgValue": "sphere" },
+        { "id": "gumdrop", "label": "Gumdrop", "priceDelta": 0, "g3dpgValue": "gumdrop" },
+        { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" }
+      ],
+      "colors": [
+        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
+        { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
+        { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
+        { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
+        { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
+      ],
+      "firmnessOptions": [
+        { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "firm", "label": "Firm", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
+      ],
+      "textureEnabled": true,
+      "textureOptions": [
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
+      ],
+      "infillPattern": "gyroid",
+      "sizeMm": 35,
+      "extraSettings": { "quality": "192", "rounded": true, "cornerRadius": 4 },
+      "active": true,
+      "sortOrder": 1
+    },
+    {
+      "id": "prod_ring_squish",
+      "lineId": "line_g3d_squish",
+      "slug": "ring",
+      "name": "Ring Squish",
+      "description": "A torus printed as a continuous gyroid. Fingers find the hole; the lattice still yields. Built around the Ring / Torus toolpath in G3DPG, with the rest of the Squish palette available.",
+      "basePriceCents": 200,
+      "imageUrl": "/products/ring.jpg",
+      "gifUrl": "",
+      "videoUrl": "",
+      "gallery": [
+        { "url": "/products/ring.jpg", "kind": "image", "alt": "Ring Squish" },
+        { "url": "/products/cylinder.jpg", "kind": "image", "alt": "Cylinder cousin" },
+        { "url": "/products/macro.jpg", "kind": "image", "alt": "Gyroid" }
+      ],
+      "shapes": [
+        { "id": "ring", "label": "Ring / Torus", "priceDelta": 0, "g3dpgValue": "ring" },
+        { "id": "cylinder", "label": "Cylinder", "priceDelta": 0, "g3dpgValue": "cylinder" },
+        { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" }
+      ],
+      "colors": [
+        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
+        { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
+        { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
+        { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
+        { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
+      ],
+      "firmnessOptions": [
+        { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "firm", "label": "Firm", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
+      ],
+      "textureEnabled": true,
+      "textureOptions": [
+        { "id": "none", "label": "None", "priceDelta": 0, "meta": { "toggle": false, "amount": 0 } },
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 0, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 0, "meta": { "toggle": true, "amount": 90 } }
+      ],
+      "infillPattern": "gyroid",
+      "sizeMm": 50,
+      "extraSettings": { "quality": "192" },
+      "active": true,
+      "sortOrder": 2
+    }
+  ]
+}
