@@ -50,8 +50,9 @@ function CatalogPage() {
     setLines(catalog.lines);
     setProducts(catalog.products);
     setNewProductLineId((prev) => {
+      if (prev === "") return prev;
       if (prev && catalog.lines.some((l) => l.id === prev)) return prev;
-      return catalog.lines[0]?.id ?? "";
+      return "";
     });
   }
 
@@ -93,35 +94,8 @@ function CatalogPage() {
       toast.error("Enter a product name");
       return;
     }
-    let lineId = newProductLineId;
-    if (!lineId) {
-      if (lines.length === 0) {
-        try {
-          const created = await upsertLine({
-            data: {
-              adminCode,
-              name: "Products",
-              slug: "products",
-              tagline: "",
-              description: "",
-              coverImageUrl: "",
-              coverGifUrl: "",
-              sortOrder: 0,
-            },
-          });
-          lineId = created.id;
-          toast.message('Created a default "Products" line for you');
-        } catch (err) {
-          toast.error(
-            err instanceof Error ? err.message : "Could not create a line",
-          );
-          return;
-        }
-      } else {
-        toast.error("Pick a product line");
-        return;
-      }
-    }
+    // Empty lineId = standalone product (no line)
+    const lineId = newProductLineId;
     setAddingProduct(true);
     try {
       const created = await createProductFromTemplate({
@@ -172,7 +146,7 @@ function CatalogPage() {
       <section className="mt-6 rounded-xl bg-card p-5 shadow-[var(--shadow-border)]">
         <h2 className="font-display text-lg font-semibold">Add product</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          No new product line required — pick one you already have.
+          Pick an existing line, or choose None for a standalone product.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <div className="space-y-2">
@@ -194,17 +168,13 @@ function CatalogPage() {
               className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
               value={newProductLineId}
               onChange={(e) => setNewProductLineId(e.target.value)}
-              disabled={lines.length === 0}
             >
-              {lines.length === 0 ? (
-                <option value="">Will use a default line</option>
-              ) : (
-                lines.map((line) => (
-                  <option key={line.id} value={line.id}>
-                    {line.name}
-                  </option>
-                ))
-              )}
+              <option value="">None (standalone)</option>
+              {lines.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.name}
+                </option>
+              ))}
             </select>
           </div>
           <Button
@@ -331,10 +301,67 @@ function CatalogPage() {
             </section>
           );
         })}
-        {lines.length === 0 ? (
+        {(() => {
+          const standalone = products.filter((p) => !p.lineId);
+          if (standalone.length === 0) return null;
+          return (
+            <section className="rounded-xl bg-card p-5 shadow-[var(--shadow-border)]">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-2xl font-semibold">
+                    Standalone products
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Not assigned to any product line
+                  </p>
+                </div>
+              </div>
+              <ul className="mt-4 divide-y divide-border">
+                {standalone.map((product) => (
+                  <li
+                    key={product.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatMoney(product.basePriceCents)}
+                        {product.active ? "" : " · hidden"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          to="/admin/product/$id"
+                          params={{ id: product.id }}
+                        >
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: "product",
+                            id: product.id,
+                            name: product.name,
+                          })
+                        }
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })()}
+        {lines.length === 0 && products.filter((p) => !p.lineId).length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No product lines yet. Use <strong>Add product</strong> above — a
-            default line will be created for you — or create a line first.
+            No products yet. Use <strong>Add product</strong> above — choose
+            None for a standalone product, or create a line first.
           </p>
         ) : null}
       </div>
