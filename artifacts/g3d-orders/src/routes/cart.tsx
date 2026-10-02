@@ -21,6 +21,14 @@ export const Route = createFileRoute("/cart")({
   component: CartPage,
 });
 
+function optionLabel(
+  labels: { shape: string; color: string; firmness: string; texture: string } | undefined,
+  selection: { shape: string; color: string; firmness: string; texture: string },
+  key: "shape" | "color" | "firmness" | "texture",
+) {
+  return labels?.[key] || selection[key] || "—";
+}
+
 function CartPage() {
   const items = useCart((s) => s.items);
   const setQty = useCart((s) => s.setQty);
@@ -42,6 +50,10 @@ function CartPage() {
       toast.error("Enter the name for this order.");
       return;
     }
+    if (items.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
+    }
     setBusy(true);
     try {
       const result = await placeOrder({
@@ -51,10 +63,10 @@ function CartPage() {
             productId: item.productId,
             productName: item.productName,
             lineName: item.lineName,
-            shape: item.selection.shape,
-            color: item.selection.color,
-            firmness: item.selection.firmness,
-            texture: item.selection.texture,
+            shape: optionLabel(item.labels, item.selection, "shape"),
+            color: optionLabel(item.labels, item.selection, "color"),
+            firmness: optionLabel(item.labels, item.selection, "firmness"),
+            texture: optionLabel(item.labels, item.selection, "texture"),
             quantity: item.selection.quantity,
             unitPriceCents: item.unitPriceCents,
             personalization: item.selection.personalization,
@@ -78,6 +90,9 @@ function CartPage() {
     <SiteShell>
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
         <h1 className="font-display text-4xl font-semibold">Cart</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Saved on this device only. When you place an order it is sent to the shop admin.
+        </p>
         {items.length === 0 ? (
           <p className="mt-6 text-muted-foreground">
             Empty.{" "}
@@ -92,17 +107,26 @@ function CartPage() {
                 key={item.key}
                 className="flex gap-4 rounded-xl bg-card p-4 shadow-[var(--shadow-border)]"
               >
-                <img
-                  src={item.imageUrl}
-                  alt=""
-                  className="size-20 rounded-md object-cover"
-                />
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt=""
+                    className="size-20 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="grid size-20 place-items-center rounded-md bg-paper text-xs text-muted-foreground">
+                    No image
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{item.productName}</p>
                   <p className="text-sm text-muted-foreground">
-                    {item.selection.shape} · {item.selection.color} ·{" "}
-                    {item.selection.firmness}
-                    {item.selection.texture ? ` · ${item.selection.texture}` : ""}
+                    {optionLabel(item.labels, item.selection, "shape")} ·{" "}
+                    {optionLabel(item.labels, item.selection, "color")} ·{" "}
+                    {optionLabel(item.labels, item.selection, "firmness")}
+                    {item.selection.texture
+                      ? ` · ${optionLabel(item.labels, item.selection, "texture")}`
+                      : ""}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     For {item.selection.personalization}
@@ -138,6 +162,7 @@ function CartPage() {
                 id="order-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
               />
             </div>
 
@@ -163,7 +188,8 @@ function CartPage() {
           <DialogHeader>
             <DialogTitle>Order received</DialogTitle>
             <DialogDescription>
-              Your order has been saved. Keep this order number for reference.
+              Your order is saved on the server and will show in the admin panel.
+              Keep this order number for reference.
             </DialogDescription>
           </DialogHeader>
           {confirmation ? (
