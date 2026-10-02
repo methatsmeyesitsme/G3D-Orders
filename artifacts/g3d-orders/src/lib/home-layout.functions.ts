@@ -3,7 +3,6 @@ import { db, g3dCatalogState } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
-  DEFAULT_HOME_LAYOUT,
   mergeHomeLayout,
   type HomeLayout,
   type TextStyle,
@@ -34,6 +33,13 @@ const positionsSchema = z.object({
   lines: z.record(z.string(), posSchema),
 });
 
+const customTextSchema = z.object({
+  id: z.string().min(1).max(64),
+  text: z.string().max(2000),
+  style: textStyleSchema,
+  pos: posSchema,
+});
+
 const homeLayoutSchema = z.object({
   version: z.literal(1),
   heroEyebrow: z.string().max(120),
@@ -51,6 +57,7 @@ const homeLayoutSchema = z.object({
   freeLayout: z.boolean(),
   positions: positionsSchema,
   hiddenElements: z.array(z.string()),
+  customTexts: z.array(customTextSchema),
 });
 
 function assertAdmin(code: string) {

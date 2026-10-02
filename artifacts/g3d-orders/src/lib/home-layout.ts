@@ -20,6 +20,14 @@ export type LayoutPositions = {
   lines: Record<string, LayoutPos>;
 };
 
+/** Extra text the admin adds on the front page. */
+export type CustomTextBlock = {
+  id: string;
+  text: string;
+  style: TextStyle;
+  pos: LayoutPos;
+};
+
 /** Keys that can be hidden from the storefront (and preview). */
 export type LayoutElementKey =
   | "heroEyebrow"
@@ -27,7 +35,8 @@ export type LayoutElementKey =
   | "heroBody"
   | "heroMedia"
   | "linesHeading"
-  | `line:${string}`;
+  | `line:${string}`
+  | `text:${string}`;
 
 export type HomeLayout = {
   version: 1;
@@ -50,6 +59,8 @@ export type HomeLayout = {
   positions: LayoutPositions;
   /** Element keys removed via Preview delete (restored by Reset / Undo). */
   hiddenElements: string[];
+  /** Admin-added text blocks on the front page. */
+  customTexts: CustomTextBlock[];
 };
 
 export const DEFAULT_POSITIONS: LayoutPositions = {
@@ -59,6 +70,13 @@ export const DEFAULT_POSITIONS: LayoutPositions = {
   heroMedia: null,
   linesHeading: null,
   lines: {},
+};
+
+export const DEFAULT_CUSTOM_TEXT_STYLE: TextStyle = {
+  fontFamily: "sans",
+  fontSizePx: 18,
+  color: "",
+  fontWeight: 400,
 };
 
 export const DEFAULT_HOME_LAYOUT: HomeLayout = {
@@ -99,6 +117,7 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   freeLayout: false,
   positions: { ...DEFAULT_POSITIONS, lines: {} },
   hiddenElements: [],
+  customTexts: [],
 };
 
 export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayout {
@@ -107,9 +126,21 @@ export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayou
       ...DEFAULT_HOME_LAYOUT,
       positions: { ...DEFAULT_POSITIONS, lines: {} },
       hiddenElements: [],
+      customTexts: [],
     };
   }
   const positionsIn = partial.positions;
+  const customTexts = Array.isArray(partial.customTexts)
+    ? partial.customTexts.map((t) => ({
+        id: t.id,
+        text: String(t.text ?? ""),
+        style: { ...DEFAULT_CUSTOM_TEXT_STYLE, ...(t.style || {}) },
+        pos: {
+          x: Number(t.pos?.x ?? 10),
+          y: Number(t.pos?.y ?? 40),
+        },
+      }))
+    : [];
   return {
     ...DEFAULT_HOME_LAYOUT,
     ...partial,
@@ -145,6 +176,7 @@ export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayou
     hiddenElements: Array.isArray(partial.hiddenElements)
       ? [...partial.hiddenElements]
       : [],
+    customTexts,
   };
 }
 
@@ -193,4 +225,8 @@ export function orderLines<T extends { id: string }>(
   }
   for (const rest of map.values()) ordered.push(rest);
   return ordered;
+}
+
+export function newCustomTextId() {
+  return `txt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
