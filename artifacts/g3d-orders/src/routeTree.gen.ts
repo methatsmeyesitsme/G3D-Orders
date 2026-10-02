@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminCatalogRouteImport } from './routes/admin/catalog'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminPreviewRouteImport } from './routes/admin/preview'
+import { Route as AdminReceiptsRouteImport } from './routes/admin/receipts'
 import { Route as G3dpgAppIndexRouteImport } from './routes/g3dpg-app/index'
 import { Route as G3dpgAppSplatRouteImport } from './routes/g3dpg-app/$'
 import { Route as LineSlugRouteImport } from './routes/line.$slug'
@@ -65,6 +66,11 @@ const AdminPreviewRoute = AdminPreviewRouteImport.update({
   path: '/preview',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReceiptsRoute = AdminReceiptsRouteImport.update({
+  id: '/receipts',
+  path: '/receipts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const G3dpgAppIndexRoute = G3dpgAppIndexRouteImport.update({
   id: '/g3dpg-app/',
   path: '/g3dpg-app/',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/preview': typeof AdminPreviewRoute
+  '/admin/receipts': typeof AdminReceiptsRoute
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/preview': typeof AdminPreviewRoute
+  '/admin/receipts': typeof AdminReceiptsRoute
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/preview': typeof AdminPreviewRoute
+  '/admin/receipts': typeof AdminReceiptsRoute
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/admin/catalog'
     | '/admin/orders'
     | '/admin/preview'
+    | '/admin/receipts'
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/admin/catalog'
     | '/admin/orders'
     | '/admin/preview'
+    | '/admin/receipts'
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/admin/catalog'
     | '/admin/orders'
     | '/admin/preview'
+    | '/admin/receipts'
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPreviewRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/receipts': {
+      id: '/admin/receipts'
+      path: '/receipts'
+      fullPath: '/admin/receipts'
+      preLoaderRoute: typeof AdminReceiptsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/g3dpg-app/': {
       id: '/g3dpg-app/'
       path: '/g3dpg-app'
@@ -330,6 +349,7 @@ interface AdminRouteChildren {
   AdminCatalogRoute: typeof AdminCatalogRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPreviewRoute: typeof AdminPreviewRoute
+  AdminReceiptsRoute: typeof AdminReceiptsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminLineIdRoute: typeof AdminLineIdRoute
   AdminProductIdRoute: typeof AdminProductIdRoute
@@ -339,6 +359,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCatalogRoute: AdminCatalogRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPreviewRoute: AdminPreviewRoute,
+  AdminReceiptsRoute: AdminReceiptsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminLineIdRoute: AdminLineIdRoute,
   AdminProductIdRoute: AdminProductIdRoute,
