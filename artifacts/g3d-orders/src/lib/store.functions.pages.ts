@@ -39,7 +39,6 @@ async function apiCall<T>(action: string, data: unknown): Promise<T> {
   return body.data as T;
 }
 
-// Bumped so browsers drop old cached catalogs with +$2/+ $4 firmness deltas.
 const CATALOG_KEY = "g3d-orders-pages-catalog-v3";
 let catalogPromise: Promise<Catalog> | null = null;
 
@@ -51,7 +50,7 @@ function firmnessPriceDelta(id: string, label: string): number {
   const key = `${id} ${label}`.toLowerCase();
   if (key.includes("hard")) return 50;
   if (key.includes("medium") || key.includes("med ")) return 25;
-  return 0; // soft / super soft
+  return 0;
 }
 
 function normalizeCatalogPricing(catalog: Catalog): Catalog {
@@ -110,7 +109,6 @@ async function loadInitialCatalog(): Promise<Catalog> {
   }
   const catalog = normalizeCatalogPricing((await response.json()) as Catalog);
   window.localStorage.setItem(CATALOG_KEY, JSON.stringify(catalog));
-  // Drop older cache keys so stale +$2 firmness never sticks around.
   window.localStorage.removeItem("g3d-orders-pages-catalog-v1");
   window.localStorage.removeItem("g3d-orders-pages-catalog-v2");
   return catalog;
@@ -221,6 +219,14 @@ export async function updateOrderStatus({
   data: { adminCode: string; orderId: string; status: OrderStatus };
 }) {
   return apiCall<{ ok: true }>("updateOrderStatus", data);
+}
+
+export async function deleteOrder({
+  data,
+}: {
+  data: { adminCode: string; orderId: string };
+}) {
+  return apiCall<{ ok: true }>("deleteOrder", data);
 }
 
 export async function listCatalog({
