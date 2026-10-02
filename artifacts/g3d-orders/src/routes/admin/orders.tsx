@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import { openG3dpg } from "@/lib/g3dpg";
-import { listOrders, updateOrderStatus } from "@/lib/store.functions";
+import { deleteOrder, listOrders, updateOrderStatus } from "@/lib/store.functions";
 import { ORDER_STATUSES, type Order, type OrderStatus } from "@/lib/types";
 import { formatMoney } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/admin/orders")({
 function OrdersPage() {
   const adminCode = useAdminAccess((s) => s.code);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     return listOrders({ data: { adminCode } }).then(setOrders);
@@ -25,8 +27,36 @@ function OrdersPage() {
   }, [refresh]);
 
   async function setStatus(orderId: string, status: OrderStatus) {
-    await updateOrderStatus({ data: { adminCode, orderId, status } });
-    await refresh();
+    setBusyId(orderId);
+    try {
+      await updateOrderStatus({ data: { adminCode, orderId, status } });
+      await refresh();
+      if (status === "completed") toast.success("Order marked completed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update status");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function removeOrder(order: Order) {
+    if (
+      !window.confirm(
+        `Delete order ${order.orderNumber}? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setBusyId(order.id);
+    try {
+      await deleteOrder({ data: { adminCode, orderId: order.id } });
+      await refresh();
+      toast.success(`Deleted ${order.orderNumber}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete order");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -50,9 +80,25 @@ function OrdersPage() {
                   {order.customerName}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={order.status} />
                 <p className="tabular-nums">{formatMoney(order.totalCents)}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busyId === order.id || order.status === "completed"}
+                  onClick={() => void setStatus(order.id, "completed")}
+                >
+                  Completed
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={busyId === order.id}
+                  onClick={() => void removeOrder(order)}
+                >
+                  Delete
+                </Button>
               </div>
             </div>
             <div className="mt-3">
