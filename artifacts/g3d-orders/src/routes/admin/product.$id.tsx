@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { OptionEditor } from "@/components/option-editor";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import { listCatalog, upsertProduct } from "@/lib/store.functions";
-import type { Product } from "@/lib/types";
+import type { Product, ProductLine } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/product/$id")({
   component: ProductEditor,
@@ -20,11 +20,13 @@ function ProductEditor() {
   const adminCode = useAdminAccess((s) => s.code);
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  const [lines, setLines] = useState<ProductLine[]>([]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     void listCatalog({ data: { adminCode } }).then((catalog) => {
       setProduct(catalog.products.find((item) => item.id === id) ?? null);
+      setLines(catalog.lines);
     });
   }, [adminCode, id]);
 
@@ -47,7 +49,7 @@ function ProductEditor() {
         data: {
           adminCode: adminCode,
           id: current.id,
-          lineId: current.lineId,
+          lineId: current.lineId || "",
           name: current.name,
           slug: current.slug,
           description: current.description,
@@ -99,6 +101,29 @@ function ProductEditor() {
               onChange={(e) => setProduct({ ...product, slug: e.target.value })}
             />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Product line</Label>
+          <select
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={product.lineId || ""}
+            onChange={(e) =>
+              setProduct({ ...product, lineId: e.target.value })
+            }
+          >
+            <option value="">None (standalone)</option>
+            {lines.map((line) => (
+              <option key={line.id} value={line.id}>
+                {line.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            None means this product is not under a product line. Store URL:{" "}
+            {product.lineId
+              ? `/line/…/p/${product.slug}`
+              : `/p/${product.slug}`}
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Description</Label>
@@ -222,85 +247,6 @@ function ProductEditor() {
           accept="video/*"
           onChange={(videoUrl) => setProduct({ ...product, videoUrl })}
         />
-
-        <section className="space-y-4 rounded-xl bg-card p-4 shadow-[var(--shadow-border)]">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="font-display font-semibold">Gallery</h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setProduct({
-                  ...product,
-                  gallery: [
-                    ...product.gallery,
-                    { url: "", kind: "image", alt: "" },
-                  ],
-                })
-              }
-            >
-              Add gallery item
-            </Button>
-          </div>
-          {product.gallery.map((item, index) => (
-            <div
-              key={index}
-              className="space-y-3 rounded-lg border border-border/70 p-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <select
-                  className="h-11 rounded-md border border-input bg-background px-2 text-sm"
-                  value={item.kind}
-                  onChange={(e) => {
-                    const kind = e.target.value as "image" | "gif" | "video";
-                    const gallery = product.gallery.map((g, i) =>
-                      i === index ? { ...g, kind } : g,
-                    );
-                    setProduct({ ...product, gallery });
-                  }}
-                >
-                  <option value="image">Image</option>
-                  <option value="gif">GIF</option>
-                  <option value="video">Video</option>
-                </select>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setProduct({
-                      ...product,
-                      gallery: product.gallery.filter((_, i) => i !== index),
-                    })
-                  }
-                >
-                  Remove
-                </Button>
-              </div>
-              <FileUrlField
-                label={`Gallery item ${index + 1}`}
-                value={item.url}
-                accept={
-                  item.kind === "video"
-                    ? "video/*"
-                    : item.kind === "gif"
-                      ? "image/gif"
-                      : "image/*"
-                }
-                onChange={(url) => {
-                  const gallery = product.gallery.map((g, i) =>
-                    i === index ? { ...g, url } : g,
-                  );
-                  setProduct({ ...product, gallery });
-                }}
-              />
-            </div>
-          ))}
-          {product.gallery.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No gallery items yet.</p>
-          ) : null}
-        </section>
 
         <OptionEditor
           title="Shapes"
