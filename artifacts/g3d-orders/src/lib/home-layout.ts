@@ -7,6 +7,19 @@ export type TextStyle = {
   fontWeight: number;
 };
 
+/** Position as percent of the home canvas (0–100). */
+export type LayoutPos = { x: number; y: number };
+
+export type LayoutPositions = {
+  heroEyebrow: LayoutPos | null;
+  heroTitle: LayoutPos | null;
+  heroBody: LayoutPos | null;
+  heroMedia: LayoutPos | null;
+  linesHeading: LayoutPos | null;
+  /** product-line id → position */
+  lines: Record<string, LayoutPos>;
+};
+
 export type HomeLayout = {
   version: 1;
   heroEyebrow: string;
@@ -18,11 +31,23 @@ export type HomeLayout = {
   heroTitleStyle: TextStyle;
   heroBodyStyle: TextStyle;
   linesHeadingStyle: TextStyle;
-  /** "text-left" = copy left, media right; "text-right" swaps */
+  /** "text-left" = copy left, media right; "text-right" swaps (flow mode only) */
   heroPlacement: "text-left" | "text-right";
   /** Order of product-line cards on the home page (line ids). Missing ids append at end. */
   lineOrder: string[];
   linesGridCols: 1 | 2 | 3;
+  /** When true, text and product cards use free absolute positions. */
+  freeLayout: boolean;
+  positions: LayoutPositions;
+};
+
+export const DEFAULT_POSITIONS: LayoutPositions = {
+  heroEyebrow: null,
+  heroTitle: null,
+  heroBody: null,
+  heroMedia: null,
+  linesHeading: null,
+  lines: {},
 };
 
 export const DEFAULT_HOME_LAYOUT: HomeLayout = {
@@ -60,14 +85,23 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   heroPlacement: "text-left",
   lineOrder: [],
   linesGridCols: 2,
+  freeLayout: false,
+  positions: { ...DEFAULT_POSITIONS, lines: {} },
 };
 
 export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayout {
-  if (!partial) return { ...DEFAULT_HOME_LAYOUT };
+  if (!partial) {
+    return {
+      ...DEFAULT_HOME_LAYOUT,
+      positions: { ...DEFAULT_POSITIONS, lines: {} },
+    };
+  }
+  const positionsIn = partial.positions;
   return {
     ...DEFAULT_HOME_LAYOUT,
     ...partial,
     version: 1,
+    freeLayout: Boolean(partial.freeLayout),
     heroEyebrowStyle: {
       ...DEFAULT_HOME_LAYOUT.heroEyebrowStyle,
       ...(partial.heroEyebrowStyle || {}),
@@ -87,10 +121,18 @@ export function mergeHomeLayout(partial?: Partial<HomeLayout> | null): HomeLayou
     lineOrder: Array.isArray(partial.lineOrder)
       ? partial.lineOrder
       : DEFAULT_HOME_LAYOUT.lineOrder,
+    positions: {
+      heroEyebrow: positionsIn?.heroEyebrow ?? null,
+      heroTitle: positionsIn?.heroTitle ?? null,
+      heroBody: positionsIn?.heroBody ?? null,
+      heroMedia: positionsIn?.heroMedia ?? null,
+      linesHeading: positionsIn?.linesHeading ?? null,
+      lines: { ...(positionsIn?.lines || {}) },
+    },
   };
 }
 
-export function textStyleCss(style: TextStyle): React.CSSProperties {
+export function textStyleCss(style: TextStyle): Record<string, string | number | undefined> {
   const fontFamily =
     style.fontFamily === "display"
       ? "var(--font-serif), ui-serif, Georgia, serif"
@@ -105,9 +147,14 @@ export function textStyleCss(style: TextStyle): React.CSSProperties {
   };
 }
 
-// Avoid importing React types in a pure module for CSSProperties
-declare namespace React {
-  type CSSProperties = Record<string, string | number | undefined>;
+export function posStyle(pos: LayoutPos | null | undefined): Record<string, string | number | undefined> | undefined {
+  if (!pos) return undefined;
+  return {
+    position: "absolute",
+    left: `${pos.x}%`,
+    top: `${pos.y}%`,
+    maxWidth: "42%",
+  };
 }
 
 export function orderLines<T extends { id: string }>(

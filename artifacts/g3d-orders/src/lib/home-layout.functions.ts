@@ -20,6 +20,20 @@ const textStyleSchema = z.object({
   fontWeight: z.number().min(100).max(900),
 });
 
+const posSchema = z.object({
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+});
+
+const positionsSchema = z.object({
+  heroEyebrow: posSchema.nullable(),
+  heroTitle: posSchema.nullable(),
+  heroBody: posSchema.nullable(),
+  heroMedia: posSchema.nullable(),
+  linesHeading: posSchema.nullable(),
+  lines: z.record(z.string(), posSchema),
+});
+
 const homeLayoutSchema = z.object({
   version: z.literal(1),
   heroEyebrow: z.string().max(120),
@@ -34,6 +48,8 @@ const homeLayoutSchema = z.object({
   heroPlacement: z.enum(["text-left", "text-right"]),
   lineOrder: z.array(z.string()),
   linesGridCols: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  freeLayout: z.boolean(),
+  positions: positionsSchema,
 });
 
 function assertAdmin(code: string) {
@@ -70,28 +86,35 @@ export const saveHomeLayout = createServerFn({ method: "POST" })
       .values({ id: HOME_ID, catalog: layout as unknown as Record<string, unknown> })
       .onConflictDoUpdate({
         target: g3dCatalogState.id,
-        set: { catalog: layout as unknown as Record<string, unknown>, updatedAt: new Date() },
+        set: {
+          catalog: layout as unknown as Record<string, unknown>,
+          updatedAt: new Date(),
+        },
       });
     return { ok: true as const, layout };
   });
 
-/** Client-side fallback for static / GitHub Pages builds. */
 const LS_KEY = "g3d-home-layout-v1";
 
 export function loadHomeLayoutClient(): HomeLayout {
-  if (typeof window === "undefined") return { ...DEFAULT_HOME_LAYOUT };
+  if (typeof window === "undefined") return mergeHomeLayout(null);
   try {
     const raw = window.localStorage.getItem(LS_KEY);
-    if (!raw) return { ...DEFAULT_HOME_LAYOUT };
+    if (!raw) return mergeHomeLayout(null);
     return mergeHomeLayout(JSON.parse(raw) as Partial<HomeLayout>);
   } catch {
-    return { ...DEFAULT_HOME_LAYOUT };
+    return mergeHomeLayout(null);
   }
 }
 
 export function saveHomeLayoutClient(layout: HomeLayout) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(LS_KEY, JSON.stringify(mergeHomeLayout(layout)));
+}
+
+export function clearHomeLayoutClient() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(LS_KEY);
 }
 
 export type { HomeLayout, TextStyle };
