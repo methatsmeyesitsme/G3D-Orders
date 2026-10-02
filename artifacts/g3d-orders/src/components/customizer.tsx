@@ -93,6 +93,21 @@ export function Customizer({
 
   return (
     <div className="space-y-8">
+      <div className="space-y-2">
+        <Label htmlFor="name">Your name</Label>
+        <Input
+          id="name"
+          maxLength={40}
+          placeholder="Name on this piece"
+          value={selection.personalization}
+          onChange={(e) => patch({ personalization: e.target.value })}
+          autoComplete="name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Required — used on the order and in the print file name.
+        </p>
+      </div>
+
       <OptionGrid
         label="Shape"
         options={product.shapes}
@@ -114,63 +129,51 @@ export function Customizer({
       />
       {product.textureEnabled ? (
         <OptionGrid
-          label="Surface texture"
+          label="Texture"
           options={product.textureOptions}
           value={selection.texture}
           onChange={(texture) => patch({ texture })}
         />
       ) : null}
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="qty">Quantity</Label>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label="Decrease quantity"
-              onClick={() =>
-                patch({ quantity: Math.max(1, selection.quantity - 1) })
-              }
-            >
-              <Minus />
-            </Button>
-            <Input
-              id="qty"
-              className="text-center tabular-nums"
-              type="number"
-              min={1}
-              max={99}
-              value={selection.quantity}
-              onChange={(e) =>
-                patch({
-                  quantity: Math.max(1, Math.min(99, Number(e.target.value) || 1)),
-                })
-              }
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label="Increase quantity"
-              onClick={() =>
-                patch({ quantity: Math.min(99, selection.quantity + 1) })
-              }
-            >
-              <Plus />
-            </Button>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="name">Name on this piece</Label>
+      <div className="space-y-2">
+        <Label htmlFor="qty">Quantity</Label>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Decrease quantity"
+            onClick={() =>
+              patch({ quantity: Math.max(1, selection.quantity - 1) })
+            }
+          >
+            <Minus />
+          </Button>
           <Input
-            id="name"
-            maxLength={40}
-            placeholder="Your name"
-            value={selection.personalization}
-            onChange={(e) => patch({ personalization: e.target.value })}
+            id="qty"
+            className="w-20 text-center tabular-nums"
+            type="number"
+            min={1}
+            max={99}
+            value={selection.quantity}
+            onChange={(e) =>
+              patch({
+                quantity: Math.max(1, Math.min(99, Number(e.target.value) || 1)),
+              })
+            }
           />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Increase quantity"
+            onClick={() =>
+              patch({ quantity: Math.min(99, selection.quantity + 1) })
+            }
+          >
+            <Plus />
+          </Button>
         </div>
       </div>
 
