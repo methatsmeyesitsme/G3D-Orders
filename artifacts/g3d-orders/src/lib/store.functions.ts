@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { db, g3dCatalogState, g3dStoreOrders } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { DEFAULT_COLORS, DEFAULT_FIRMNESS, DEFAULT_SHAPES, DEFAULT_TEXTURE } from "@/lib/catalog-defaults";
+import { BASE_SHAPE_PRICE_CENTS, DEFAULT_COLORS, DEFAULT_FIRMNESS, DEFAULT_SHAPES, DEFAULT_TEXTURE } from "@/lib/catalog-defaults";
 import {
   assertStoreAccess,
   hasStoreAccess,
@@ -40,18 +40,54 @@ async function ghJson<T>(path:string, init?:RequestInit):Promise<T> {
 }
 function decodeGithubContent(content:string) { return Buffer.from(content.replace(/\s/g,""),"base64").toString("utf8"); }
 async function getGithubFile(path:string) { return ghJson<{content:string;sha:string}>(`/contents/${path}?ref=${encodeURIComponent(GH_BRANCH)}`); }
+
+function normalizeOptionDeltas(list: { id: string; label: string; priceDelta: number; [k: string]: unknown }[], kind: "firmness" | "texture" | "other") {
+  return list.map((item) => {
+    if (kind === "texture") return { ...item, priceDelta: 0 };
+    if (kind === "firmness") {
+      const id = (item.id || "").toLowerCase();
+      const label = (item.label || "").toLowerCase();
+      let priceDelta = 0;
+      if (id === "medium" || label.includes("medium")) priceDelta = 25;
+      else if (id === "hard" || label.includes("hard")) priceDelta = 50;
+      else priceDelta = 0; // soft / super soft
+      return { ...item, priceDelta };
+    }
+    return { ...item, priceDelta: 0 };
+  });
+}
+
+/** Keep storefront pricing fixed: $2 base + firmness only. Ignores stale DB values. */
+function normalizeCatalogPricing(catalog: Catalog): Catalog {
+  return {
+    ...catalog,
+    products: catalog.products.map((product) => ({
+      ...product,
+      basePriceCents: BASE_SHAPE_PRICE_CENTS,
+      shapes: product.shapes.map((s) => ({ ...s, priceDelta: 0 })),
+      colors: product.colors.map((c) => ({ ...c, priceDelta: 0 })),
+      firmnessOptions: normalizeOptionDeltas(product.firmnessOptions as any, "firmness") as typeof product.firmnessOptions,
+      textureOptions: normalizeOptionDeltas(product.textureOptions as any, "texture") as typeof product.textureOptions,
+    })),
+  };
+}
+
 async function readCatalog():Promise<Catalog> {
   assertStoreAccess();
   const [saved] = await db.select({ catalog: g3dCatalogState.catalog })
     .from(g3dCatalogState)
     .where(eq(g3dCatalogState.id, "primary"))
     .limit(1);
-  if (saved) return saved.catalog as unknown as Catalog;
-  try {
-    return JSON.parse(decodeGithubContent((await getGithubFile(CATALOG_PATH)).content)) as Catalog;
-  } catch {
-    return localCatalog as unknown as Catalog;
+  let catalog: Catalog;
+  if (saved) catalog = saved.catalog as unknown as Catalog;
+  else {
+    try {
+      catalog = JSON.parse(decodeGithubContent((await getGithubFile(CATALOG_PATH)).content)) as Catalog;
+    } catch {
+      catalog = localCatalog as unknown as Catalog;
+    }
   }
+  return normalizeCatalogPricing(catalog);
 }
 async function writeCatalog(catalog:Catalog,_message:string) {
   await db.insert(g3dCatalogState)
@@ -168,14 +204,14 @@ export const upsertProduct=createServerFn({method:"POST"}).validator(z.object({
   imageUrl:z.string().max(400000),gifUrl:z.string().max(400000),videoUrl:z.string().max(400000),gallery:z.array(gallerySchema),shapes:z.array(optionSchema),colors:z.array(optionSchema),firmnessOptions:z.array(optionSchema),textureEnabled:z.boolean(),textureOptions:z.array(optionSchema),
   infillPattern:z.string().min(1).max(40),sizeMm:z.number().int().min(8).max(400),extraSettings:extraSchema,active:z.boolean(),sortOrder:z.number().int()
 })).handler(async({data})=>{
-  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId,slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:data.basePriceCents,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes,colors:data.colors,firmnessOptions:data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
+  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId,slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:BASE_SHAPE_PRICE_CENTS,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes.map(s=>({...s,priceDelta:0})),colors:data.colors.map(c=>({...c,priceDelta:0})),firmnessOptions:normalizeOptionDeltas(data.firmnessOptions as any,"firmness") as typeof data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:normalizeOptionDeltas(data.textureOptions as any,"texture") as typeof data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
   await writeCatalog({...c,products:[...c.products.filter(p=>p.id!==id),product]},`Update product ${product.name}`); return {id,slug:product.slug};
 });
 export const deleteProduct=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),id:z.string()})).handler(async({data})=>{
   assertAdminAccess(data.adminCode); const c=await readCatalog(); await writeCatalog({...c,products:c.products.filter(p=>p.id!==data.id)},`Delete product ${data.id}`); return {ok:true as const};
 });
 export const createProductFromTemplate=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),lineId:z.string(),name:z.string().min(1).max(80)})).handler(async({data})=>{
-  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=newId("prod"); const p:Product={id,lineId:data.lineId,slug:slugify(data.name),name:data.name.trim(),description:"",basePriceCents:2500,imageUrl:"",gifUrl:"",videoUrl:"",gallery:[],shapes:DEFAULT_SHAPES,colors:DEFAULT_COLORS,firmnessOptions:DEFAULT_FIRMNESS,textureEnabled:true,textureOptions:DEFAULT_TEXTURE,infillPattern:"gyroid",sizeMm:50,extraSettings:{quality:"192",rounded:true,cornerRadius:5},active:true,sortOrder:c.products.filter(x=>x.lineId===data.lineId).length};
+  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=newId("prod"); const p:Product={id,lineId:data.lineId,slug:slugify(data.name),name:data.name.trim(),description:"",basePriceCents:BASE_SHAPE_PRICE_CENTS,imageUrl:"",gifUrl:"",videoUrl:"",gallery:[],shapes:DEFAULT_SHAPES,colors:DEFAULT_COLORS,firmnessOptions:DEFAULT_FIRMNESS,textureEnabled:true,textureOptions:DEFAULT_TEXTURE,infillPattern:"gyroid",sizeMm:50,extraSettings:{quality:"192",rounded:true,cornerRadius:5},active:true,sortOrder:c.products.filter(x=>x.lineId===data.lineId).length};
   await writeCatalog({...c,products:[...c.products,p]},`Create product ${p.name}`); return {id:p.id,slug:p.slug};
 });
 function slugify(value:string){return value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"").slice(0,48)||"item";}
