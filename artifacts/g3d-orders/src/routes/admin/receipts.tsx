@@ -86,35 +86,49 @@ function ReceiptsPage() {
       <div className="mt-6 space-y-2">
         {receipts.map((order) => {
           const isOpen = Boolean(open[order.id]);
+          const busy = busyId === order.id;
           return (
             <div
               key={order.id}
               className="rounded-xl bg-card shadow-[var(--shadow-border)]"
             >
-              <button
-                type="button"
-                onClick={() => toggle(order.id)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5"
-                aria-expanded={isOpen}
-              >
-                <div className="min-w-0 flex-1">
-                  <span className="font-medium">{order.customerName}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground sm:mt-0 sm:ml-3 sm:inline">
-                    Completed {formatWhen(order.completedAt)}
-                  </span>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <span className="hidden tabular-nums text-sm text-muted-foreground sm:inline">
-                    {formatMoney(order.totalCents)}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "size-4 text-muted-foreground transition-transform",
-                      isOpen && "rotate-180",
-                    )}
-                  />
-                </div>
-              </button>
+              <div className="flex w-full items-center gap-2 px-4 py-3 sm:px-5">
+                <button
+                  type="button"
+                  onClick={() => toggle(order.id)}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                  aria-expanded={isOpen}
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">{order.customerName}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground sm:mt-0 sm:ml-3 sm:inline">
+                      Completed {formatWhen(order.completedAt)}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="hidden tabular-nums text-sm text-muted-foreground sm:inline">
+                      {formatMoney(order.totalCents)}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "size-4 text-muted-foreground transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                    />
+                  </div>
+                </button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={busy}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void removeOrder(order);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
               {isOpen ? (
                 <div className="border-t border-border px-4 pb-4 pt-3 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -134,19 +148,9 @@ function ReceiptsPage() {
                         </p>
                       ) : null}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="tabular-nums font-medium">
-                        {formatMoney(order.totalCents)}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={busyId === order.id}
-                        onClick={() => void removeOrder(order)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                    <p className="tabular-nums font-medium">
+                      {formatMoney(order.totalCents)}
+                    </p>
                   </div>
                   <OrderItemsTable order={order} />
                 </div>
