@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import {
   createProductFromTemplate,
@@ -34,6 +35,9 @@ function CatalogPage() {
   const [lines, setLines] = useState<ProductLine[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [newLine, setNewLine] = useState("");
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductLineId, setNewProductLineId] = useState("");
+  const [addingProduct, setAddingProduct] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     kind: "line" | "product";
     id: string;
@@ -45,6 +49,10 @@ function CatalogPage() {
     const catalog = await listCatalog({ data: { adminCode } });
     setLines(catalog.lines);
     setProducts(catalog.products);
+    setNewProductLineId((prev) => {
+      if (prev && catalog.lines.some((l) => l.id === prev)) return prev;
+      return catalog.lines[0]?.id ?? "";
+    });
   }
 
   useEffect(() => {
@@ -79,6 +87,62 @@ function CatalogPage() {
     }
   }
 
+  async function addProduct() {
+    const name = newProductName.trim();
+    if (!name) {
+      toast.error("Enter a product name");
+      return;
+    }
+    let lineId = newProductLineId;
+    if (!lineId) {
+      if (lines.length === 0) {
+        try {
+          const created = await upsertLine({
+            data: {
+              adminCode,
+              name: "Products",
+              slug: "products",
+              tagline: "",
+              description: "",
+              coverImageUrl: "",
+              coverGifUrl: "",
+              sortOrder: 0,
+            },
+          });
+          lineId = created.id;
+          toast.message('Created a default "Products" line for you');
+        } catch (err) {
+          toast.error(
+            err instanceof Error ? err.message : "Could not create a line",
+          );
+          return;
+        }
+      } else {
+        toast.error("Pick a product line");
+        return;
+      }
+    }
+    setAddingProduct(true);
+    try {
+      const created = await createProductFromTemplate({
+        data: { adminCode, lineId, name },
+      });
+      setNewProductName("");
+      toast.success("Product created");
+      await refresh();
+      void router.navigate({
+        to: "/admin/product/$id",
+        params: { id: created.id },
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Could not create product",
+      );
+    } finally {
+      setAddingProduct(false);
+    }
+  }
+
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -102,16 +166,70 @@ function CatalogPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <h1 className="font-display text-3xl font-semibold">Catalog</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Add lines and products from here. No code edits.
+        Add products to an existing line, or create a new line if you need one.
       </p>
+
+      <section className="mt-6 rounded-xl bg-card p-5 shadow-[var(--shadow-border)]">
+        <h2 className="font-display text-lg font-semibold">Add product</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          No new product line required — pick one you already have.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <div className="space-y-2">
+            <Label htmlFor="new-product-name">Product name</Label>
+            <Input
+              id="new-product-name"
+              placeholder="e.g. Gumdrop Soft"
+              value={newProductName}
+              onChange={(e) => setNewProductName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void addProduct();
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-product-line">Product line</Label>
+            <select
+              id="new-product-line"
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+              value={newProductLineId}
+              onChange={(e) => setNewProductLineId(e.target.value)}
+              disabled={lines.length === 0}
+            >
+              {lines.length === 0 ? (
+                <option value="">Will use a default line</option>
+              ) : (
+                lines.map((line) => (
+                  <option key={line.id} value={line.id}>
+                    {line.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+          <Button
+            onClick={() => void addProduct()}
+            disabled={addingProduct || !newProductName.trim()}
+          >
+            {addingProduct ? "Adding…" : "Add product"}
+          </Button>
+        </div>
+      </section>
+
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
         <Input
-          placeholder="New product line name"
+          placeholder="New product line name (optional)"
           value={newLine}
           onChange={(e) => setNewLine(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void addLine();
+          }}
         />
-        <Button onClick={() => void addLine()}>Create line</Button>
+        <Button variant="outline" onClick={() => void addLine()}>
+          Create line
+        </Button>
       </div>
+
       <div className="mt-8 space-y-8">
         {lines.map((line) => {
           const lineProducts = products.filter((p) => p.lineId === line.id);
@@ -122,7 +240,9 @@ function CatalogPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-2xl font-semibold">{line.name}</h2>
+                  <h2 className="font-display text-2xl font-semibold">
+                    {line.name}
+                  </h2>
                   <p className="text-sm text-muted-foreground">/{line.slug}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -179,7 +299,10 @@ function CatalogPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to="/admin/product/$id" params={{ id: product.id }}>
+                        <Link
+                          to="/admin/product/$id"
+                          params={{ id: product.id }}
+                        >
                           Edit
                         </Link>
                       </Button>
@@ -208,6 +331,12 @@ function CatalogPage() {
             </section>
           );
         })}
+        {lines.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No product lines yet. Use <strong>Add product</strong> above — a
+            default line will be created for you — or create a line first.
+          </p>
+        ) : null}
       </div>
       <AlertDialog
         open={deleteTarget !== null}
