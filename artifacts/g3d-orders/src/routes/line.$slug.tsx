@@ -1,4 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  Outlet,
+  useChildMatches,
+} from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { MediaFrame } from "@/components/media-frame";
 import { getLineBySlug } from "@/lib/store.functions";
@@ -10,8 +16,18 @@ export const Route = createFileRoute("/line/$slug")({
     if (!data) throw notFound();
     return data;
   },
-  component: LinePage,
+  component: LineLayout,
 });
+
+function LineLayout() {
+  // Product page is a child route (/line/$slug/p/$productSlug).
+  // Without an Outlet, clicks look like they do nothing.
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) {
+    return <Outlet />;
+  }
+  return <LinePage />;
+}
 
 function LinePage() {
   const { line, products } = Route.useLoaderData();
@@ -47,7 +63,7 @@ function LinePage() {
               key={product.id}
               to="/line/$slug/p/$productSlug"
               params={{ slug: line.slug, productSlug: product.slug }}
-              className="overflow-hidden rounded-xl bg-card shadow-[var(--shadow-border)]"
+              className="block overflow-hidden rounded-xl bg-card shadow-[var(--shadow-border)] transition-opacity hover:opacity-95"
             >
               <div className="aspect-square bg-paper">
                 <MediaFrame src={product.imageUrl} alt={product.name} />
@@ -63,6 +79,11 @@ function LinePage() {
               </div>
             </Link>
           ))}
+          {products.length === 0 ? (
+            <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
+              No products in this line yet.
+            </p>
+          ) : null}
         </div>
       </section>
     </SiteShell>
