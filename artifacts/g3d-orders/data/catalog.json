@@ -38,23 +38,23 @@
         { "id": "ring", "label": "Ring / Torus", "priceDelta": 400, "g3dpgValue": "ring" }
       ],
       "colors": [
-        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0, "imageUrl": "/products/sphere-black.jpg" },
-        { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0, "imageUrl": "/products/cube-red.jpg" },
-        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0, "imageUrl": "/products/gumdrop.jpg" },
-        { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0, "imageUrl": "/products/gumdrop-blue.jpg" },
+        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
+        { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
+        { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
         { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
         { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
       ],
       "firmnessOptions": [
         { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 200, "meta": { "thickness": 1.5, "periods": 2.5 } },
-        { "id": "hard", "label": "Hard", "priceDelta": 400, "meta": { "thickness": 2.4, "periods": 3.0 } }
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "hard", "label": "Hard", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "low", "label": "Low", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 150, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 300, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
@@ -84,23 +84,23 @@
         { "id": "cube", "label": "Square / Cube", "priceDelta": 0, "g3dpgValue": "cube" }
       ],
       "colors": [
-        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0, "imageUrl": "/products/sphere-black.jpg" },
+        { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
         { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
-        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0, "imageUrl": "/products/sphere.jpg" },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
         { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
         { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
         { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
       ],
       "firmnessOptions": [
         { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 200, "meta": { "thickness": 1.5, "periods": 2.5 } },
-        { "id": "hard", "label": "Hard", "priceDelta": 400, "meta": { "thickness": 2.4, "periods": 3.0 } }
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "hard", "label": "Hard", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "low", "label": "Low", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 150, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 300, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 35,
@@ -131,21 +131,21 @@
       "colors": [
         { "id": "black", "label": "Black", "hex": "#171717", "priceDelta": 0 },
         { "id": "red", "label": "Red", "hex": "#c2302a", "priceDelta": 0 },
-        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0, "imageUrl": "/products/ring.jpg" },
+        { "id": "white", "label": "White", "hex": "#f4f1ea", "priceDelta": 0 },
         { "id": "blue", "label": "Blue", "hex": "#1e4f8f", "priceDelta": 0 },
         { "id": "yellow", "label": "Yellow", "hex": "#d9a800", "priceDelta": 0 },
         { "id": "orange", "label": "Orange", "hex": "#e06a2c", "priceDelta": 0 }
       ],
       "firmnessOptions": [
         { "id": "soft", "label": "Soft", "priceDelta": 0, "meta": { "thickness": 1.2, "periods": 2.2 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 200, "meta": { "thickness": 1.5, "periods": 2.5 } },
-        { "id": "hard", "label": "Hard", "priceDelta": 400, "meta": { "thickness": 2.4, "periods": 3.0 } }
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "thickness": 1.5, "periods": 2.5 } },
+        { "id": "hard", "label": "Hard", "priceDelta": 50, "meta": { "thickness": 2.4, "periods": 3.0 } }
       ],
       "textureEnabled": true,
       "textureOptions": [
-        { "id": "low", "label": "Low", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
-        { "id": "medium", "label": "Medium", "priceDelta": 150, "meta": { "toggle": true, "amount": 50 } },
-        { "id": "max", "label": "Max", "priceDelta": 300, "meta": { "toggle": true, "amount": 90 } }
+        { "id": "little", "label": "Little", "priceDelta": 0, "meta": { "toggle": true, "amount": 25 } },
+        { "id": "medium", "label": "Medium", "priceDelta": 25, "meta": { "toggle": true, "amount": 50 } },
+        { "id": "max", "label": "Max", "priceDelta": 50, "meta": { "toggle": true, "amount": 90 } }
       ],
       "infillPattern": "gyroid",
       "sizeMm": 50,
