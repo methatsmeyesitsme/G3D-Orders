@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { MediaFrame } from "@/components/media-frame";
 import {
+  isHidden,
   orderLines,
   posStyle,
   textStyleCss,
@@ -17,7 +18,9 @@ export const Route = createFileRoute("/")({
       listLines(),
       getHomeLayout().catch(() => null),
     ]);
-    const ordered = orderLines(lines, layout?.lineOrder ?? []);
+    const ordered = orderLines(lines, layout?.lineOrder ?? []).filter(
+      (l) => !layout || !isHidden(layout as HomeLayout, `line:${l.id}`),
+    );
     const featuredLine = ordered[0] ?? lines[0];
     const featured = featuredLine
       ? await getLineBySlug({ data: { slug: featuredLine.slug } })
@@ -32,6 +35,7 @@ function Home() {
   const cover = featured?.line.coverGifUrl || featured?.line.coverImageUrl;
   const L = layout;
   const free = Boolean(L?.freeLayout);
+  const hidden = (key: string) => (L ? isHidden(L, key) : false);
 
   const heroEyebrow = L?.heroEyebrow ?? "Product studio";
   const heroTitle = L?.heroTitle ?? "Lattice you can hold.";
@@ -47,58 +51,68 @@ function Home() {
     return (
       <SiteShell>
         <div className="relative mx-auto min-h-[720px] w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
-          <div
-            className="max-w-[42%]"
-            style={posStyle(p.heroEyebrow ?? { x: 4, y: 4 })}
-          >
-            <p
-              className="uppercase tracking-[0.28em] text-accent"
-              style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
+          {!hidden("heroEyebrow") ? (
+            <div
+              className="max-w-[42%]"
+              style={posStyle(p.heroEyebrow ?? { x: 4, y: 4 })}
             >
-              {heroEyebrow}
-            </p>
-          </div>
-          <div
-            className="max-w-[42%]"
-            style={posStyle(p.heroTitle ?? { x: 4, y: 10 })}
-          >
-            <h1
-              className="leading-[1.05]"
-              style={L ? textStyleCss(L.heroTitleStyle) : undefined}
+              <p
+                className="uppercase tracking-[0.28em] text-accent"
+                style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
+              >
+                {heroEyebrow}
+              </p>
+            </div>
+          ) : null}
+          {!hidden("heroTitle") ? (
+            <div
+              className="max-w-[42%]"
+              style={posStyle(p.heroTitle ?? { x: 4, y: 10 })}
             >
-              {heroTitle}
-            </h1>
-          </div>
-          <div
-            className="max-w-[42%]"
-            style={posStyle(p.heroBody ?? { x: 4, y: 28 })}
-          >
-            <p
-              className="text-muted-foreground"
-              style={L ? textStyleCss(L.heroBodyStyle) : undefined}
+              <h1
+                className="leading-[1.05]"
+                style={L ? textStyleCss(L.heroTitleStyle) : undefined}
+              >
+                {heroTitle}
+              </h1>
+            </div>
+          ) : null}
+          {!hidden("heroBody") ? (
+            <div
+              className="max-w-[42%]"
+              style={posStyle(p.heroBody ?? { x: 4, y: 28 })}
             >
-              {heroBody}
-            </p>
-          </div>
-          <div
-            className="w-[42%] overflow-hidden rounded-xl shadow-[var(--shadow-border)]"
-            style={posStyle(p.heroMedia ?? { x: 52, y: 4 })}
-          >
-            {cover ? (
-              <div className="aspect-[16/10]">
-                <MediaFrame
-                  src={cover}
-                  kind={featured?.line.coverGifUrl ? "gif" : "image"}
-                  alt="G3D Squish"
-                />
-              </div>
-            ) : null}
-          </div>
-          <div style={posStyle(p.linesHeading ?? { x: 4, y: 48 })}>
-            <h2 style={L ? textStyleCss(L.linesHeadingStyle) : undefined}>
-              {linesHeading}
-            </h2>
-          </div>
+              <p
+                className="text-muted-foreground"
+                style={L ? textStyleCss(L.heroBodyStyle) : undefined}
+              >
+                {heroBody}
+              </p>
+            </div>
+          ) : null}
+          {!hidden("heroMedia") ? (
+            <div
+              className="w-[42%] overflow-hidden rounded-xl shadow-[var(--shadow-border)]"
+              style={posStyle(p.heroMedia ?? { x: 52, y: 4 })}
+            >
+              {cover ? (
+                <div className="aspect-[16/10]">
+                  <MediaFrame
+                    src={cover}
+                    kind={featured?.line.coverGifUrl ? "gif" : "image"}
+                    alt="G3D Squish"
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {!hidden("linesHeading") ? (
+            <div style={posStyle(p.linesHeading ?? { x: 4, y: 48 })}>
+              <h2 style={L ? textStyleCss(L.linesHeadingStyle) : undefined}>
+                {linesHeading}
+              </h2>
+            </div>
+          ) : null}
           {lines.map((line, idx) => {
             const col = idx % 2;
             const row = Math.floor(idx / 2);
@@ -139,52 +153,62 @@ function Home() {
         )}
       >
         <div className={cn(placement === "text-right" && "lg:order-2")}>
-          <p
-            className="uppercase tracking-[0.28em] text-accent"
-            style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
-          >
-            {heroEyebrow}
-          </p>
-          <h1
-            className="mt-4 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl"
-            style={L ? textStyleCss(L.heroTitleStyle) : undefined}
-          >
-            {heroTitle}
-          </h1>
-          <p
-            className="mt-5 max-w-md text-base text-muted-foreground"
-            style={L ? textStyleCss(L.heroBodyStyle) : undefined}
-          >
-            {heroBody}
-          </p>
-        </div>
-        <div
-          className={cn(
-            "overflow-hidden rounded-xl shadow-[var(--shadow-border)]",
-            placement === "text-right" && "lg:order-1",
-          )}
-        >
-          {cover ? (
-            <div className="aspect-[16/10] sm:aspect-[16/9]">
-              <MediaFrame
-                src={cover}
-                kind={featured?.line.coverGifUrl ? "gif" : "image"}
-                alt="G3D Squish"
-              />
-            </div>
+          {!hidden("heroEyebrow") ? (
+            <p
+              className="uppercase tracking-[0.28em] text-accent"
+              style={L ? textStyleCss(L.heroEyebrowStyle) : undefined}
+            >
+              {heroEyebrow}
+            </p>
+          ) : null}
+          {!hidden("heroTitle") ? (
+            <h1
+              className="mt-4 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl"
+              style={L ? textStyleCss(L.heroTitleStyle) : undefined}
+            >
+              {heroTitle}
+            </h1>
+          ) : null}
+          {!hidden("heroBody") ? (
+            <p
+              className="mt-5 max-w-md text-base text-muted-foreground"
+              style={L ? textStyleCss(L.heroBodyStyle) : undefined}
+            >
+              {heroBody}
+            </p>
           ) : null}
         </div>
+        {!hidden("heroMedia") ? (
+          <div
+            className={cn(
+              "overflow-hidden rounded-xl shadow-[var(--shadow-border)]",
+              placement === "text-right" && "lg:order-1",
+            )}
+          >
+            {cover ? (
+              <div className="aspect-[16/10] sm:aspect-[16/9]">
+                <MediaFrame
+                  src={cover}
+                  kind={featured?.line.coverGifUrl ? "gif" : "image"}
+                  alt="G3D Squish"
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
-        <div className="mb-6 flex items-end justify-between">
-          <h2
-            className="font-display text-2xl font-semibold"
-            style={L ? textStyleCss(L.linesHeadingStyle) : undefined}
-          >
-            {linesHeading}
-          </h2>
-        </div>
+        {!hidden("linesHeading") ? (
+          <div className="mb-6 flex items-end justify-between">
+            <h2
+              className="font-display text-2xl font-semibold"
+              style={L ? textStyleCss(L.linesHeadingStyle) : undefined}
+            >
+              {linesHeading}
+            </h2>
+          </div>
+        ) : null}
         <div
           className={cn(
             "grid gap-5",
