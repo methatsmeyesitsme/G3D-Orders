@@ -10,9 +10,9 @@ import { useCart } from "@/lib/cart-store";
 import {
   buildG3dpgConfig,
   defaultSelection,
+  findChoice,
   unitPriceCents,
 } from "@/lib/pricing";
-import { findChoice } from "@/lib/pricing";
 
 export const Route = createFileRoute("/line/$slug/p/$productSlug")({
   loader: async ({ params }) => {
@@ -38,12 +38,16 @@ function ProductPage() {
   function addToCart() {
     const name = selection.personalization.trim();
     if (!name) {
-      toast.error("Add a name so this piece can be filed.");
+      toast.error("Enter your name for this piece.");
       return;
     }
-    const g3dpg = buildG3dpgConfig(product, selection);
     const shape = findChoice(product.shapes, selection.shape);
     const color = findChoice(product.colors, selection.color);
+    const firmness = findChoice(product.firmnessOptions, selection.firmness);
+    const texture = product.textureEnabled
+      ? findChoice(product.textureOptions, selection.texture)
+      : undefined;
+    const g3dpg = buildG3dpgConfig(product, selection);
     const key = [
       product.id,
       selection.shape,
@@ -61,10 +65,16 @@ function ProductPage() {
       lineName: product.lineName ?? "",
       imageUrl: color?.imageUrl || product.imageUrl,
       selection,
+      labels: {
+        shape: shape?.label ?? selection.shape,
+        color: color?.label ?? selection.color,
+        firmness: firmness?.label ?? selection.firmness,
+        texture: texture?.label ?? selection.texture ?? "",
+      },
       unitPriceCents: price,
       g3dpg,
     });
-    toast.success(`${product.name} · ${shape?.label} added`);
+    toast.success(`${product.name} added to cart`);
     void navigate({ to: "/cart" });
   }
 
@@ -85,6 +95,9 @@ function ProductPage() {
             {product.description}
           </p>
           <div className="mt-8">
+            <p className="mb-6 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Build your order
+            </p>
             <Customizer
               product={product}
               selection={selection}
@@ -94,6 +107,9 @@ function ProductPage() {
           <Button className="mt-6 w-full" size="lg" onClick={addToCart}>
             Add to cart
           </Button>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Your cart stays on this device. Placed orders go to the shop admin from any device.
+          </p>
         </div>
       </div>
     </SiteShell>
