@@ -63,7 +63,7 @@ function ProductPage() {
       lineSlug: product.lineSlug ?? "",
       productName: product.name,
       lineName: product.lineName ?? "",
-      imageUrl: color?.imageUrl || product.imageUrl,
+      imageUrl: product.imageUrl,
       selection,
       labels: {
         shape: shape?.label ?? selection.shape,
