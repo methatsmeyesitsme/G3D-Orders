@@ -4,12 +4,18 @@ import { Wordmark } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 const LINKS: {
-  to: "/admin" | "/admin/orders" | "/admin/catalog" | "/admin/preview";
+  to:
+    | "/admin"
+    | "/admin/orders"
+    | "/admin/receipts"
+    | "/admin/catalog"
+    | "/admin/preview";
   label: string;
   exact?: boolean;
 }[] = [
   { to: "/admin", label: "Desk", exact: true },
   { to: "/admin/orders", label: "Orders" },
+  { to: "/admin/receipts", label: "Receipts" },
   { to: "/admin/catalog", label: "Catalog" },
   { to: "/admin/preview", label: "Preview" },
 ];
