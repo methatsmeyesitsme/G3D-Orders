@@ -238,6 +238,25 @@ async function updateOrderStatus(data: any) {
   return { ok: true };
 }
 
+async function deleteOrder(data: any) {
+  assertAdmin(data?.adminCode);
+  if (!data?.orderId || typeof data.orderId !== "string") {
+    throw new Error("Invalid order id.");
+  }
+  const path = `${ORDERS_PATH}/${data.orderId}.json`;
+  const file = await getFile(path);
+  await ghJson(`/contents/${path}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `Delete order ${data.orderId}`,
+      sha: file.sha,
+      branch: GH_BRANCH,
+    }),
+  });
+  return { ok: true };
+}
+
 export default async function handler(req: Req, res: Res) {
   cors(res);
 
@@ -267,6 +286,9 @@ export default async function handler(req: Req, res: Res) {
         break;
       case "updateOrderStatus":
         result = await updateOrderStatus(body.data);
+        break;
+      case "deleteOrder":
+        result = await deleteOrder(body.data);
         break;
       default:
         send(res, 400, { ok: false, error: "Unknown action." });
