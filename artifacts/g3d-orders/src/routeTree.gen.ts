@@ -22,10 +22,10 @@ import { Route as G3dpgAppIndexRouteImport } from './routes/g3dpg-app/index'
 import { Route as G3dpgAppSplatRouteImport } from './routes/g3dpg-app/$'
 import { Route as LineSlugRouteImport } from './routes/line.$slug'
 import { Route as OrderOrderNumberRouteImport } from './routes/order.$orderNumber'
+import { Route as PProductSlugRouteImport } from './routes/p.$productSlug'
 import { Route as AdminLineIdRouteImport } from './routes/admin/line.$id'
 import { Route as AdminProductIdRouteImport } from './routes/admin/product.$id'
 import { Route as LineSlugPProductSlugRouteImport } from './routes/line.$slug.p.$productSlug'
-import { Route as PProductSlugRouteImport } from './routes/p.$productSlug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,12 +125,12 @@ export interface FileRoutesByFullPath {
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$productSlug': typeof PProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/g3dpg-app/': typeof G3dpgAppIndexRoute
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
-  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -143,12 +143,12 @@ export interface FileRoutesByTo {
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$productSlug': typeof PProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/g3dpg-app': typeof G3dpgAppIndexRoute
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
-  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -163,12 +163,12 @@ export interface FileRoutesById {
   '/g3dpg-app/$': typeof G3dpgAppSplatRoute
   '/line/$slug': typeof LineSlugRouteWithChildren
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$productSlug': typeof PProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/g3dpg-app/': typeof G3dpgAppIndexRoute
   '/admin/line/$id': typeof AdminLineIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
   '/line/$slug/p/$productSlug': typeof LineSlugPProductSlugRoute
-  '/p/$productSlug': typeof PProductSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,12 +184,12 @@ export interface FileRouteTypes {
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
+    | '/p/$productSlug'
     | '/admin/'
     | '/g3dpg-app/'
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
-    | '/p/$productSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -202,12 +202,12 @@ export interface FileRouteTypes {
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
+    | '/p/$productSlug'
     | '/admin'
     | '/g3dpg-app'
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
-    | '/p/$productSlug'
   id:
     | '__root__'
     | '/'
@@ -221,12 +221,12 @@ export interface FileRouteTypes {
     | '/g3dpg-app/$'
     | '/line/$slug'
     | '/order/$orderNumber'
+    | '/p/$productSlug'
     | '/admin/'
     | '/g3dpg-app/'
     | '/admin/line/$id'
     | '/admin/product/$id'
     | '/line/$slug/p/$productSlug'
-    | '/p/$productSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,8 +237,8 @@ export interface RootRouteChildren {
   G3dpgAppSplatRoute: typeof G3dpgAppSplatRoute
   LineSlugRoute: typeof LineSlugRouteWithChildren
   OrderOrderNumberRoute: typeof OrderOrderNumberRoute
-  G3dpgAppIndexRoute: typeof G3dpgAppIndexRoute
   PProductSlugRoute: typeof PProductSlugRoute
+  G3dpgAppIndexRoute: typeof G3dpgAppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -334,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderOrderNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$productSlug': {
+      id: '/p/$productSlug'
+      path: '/p/$productSlug'
+      fullPath: '/p/$productSlug'
+      preLoaderRoute: typeof PProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/line/$id': {
       id: '/admin/line/$id'
       path: '/line/$id'
@@ -354,13 +361,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/line/$slug/p/$productSlug'
       preLoaderRoute: typeof LineSlugPProductSlugRouteImport
       parentRoute: typeof LineSlugRoute
-    }
-    '/p/$productSlug': {
-      id: '/p/$productSlug'
-      path: '/p/$productSlug'
-      fullPath: '/p/$productSlug'
-      preLoaderRoute: typeof PProductSlugRouteImport
-      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -407,8 +407,8 @@ const rootRouteChildren: RootRouteChildren = {
   G3dpgAppSplatRoute: G3dpgAppSplatRoute,
   LineSlugRoute: LineSlugRouteWithChildren,
   OrderOrderNumberRoute: OrderOrderNumberRoute,
-  G3dpgAppIndexRoute: G3dpgAppIndexRoute,
   PProductSlugRoute: PProductSlugRoute,
+  G3dpgAppIndexRoute: G3dpgAppIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
