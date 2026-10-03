@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -35,9 +35,8 @@ function CartPage() {
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
   const navigate = useNavigate();
-  const [name, setName] = useState(
-    () => items[0]?.selection.personalization ?? "",
-  );
+  const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     orderNumber: string;
@@ -45,8 +44,22 @@ function CartPage() {
   } | null>(null);
   const total = cartTotal(items);
 
+  // Prefill order name from the name already entered on product pages
+  // (cart hydrates from localStorage after first render, so we sync here)
+  useEffect(() => {
+    if (nameTouched) return;
+    const fromCart = items
+      .map((item) => item.selection.personalization?.trim())
+      .find((value) => value);
+    if (fromCart) setName(fromCart);
+  }, [items, nameTouched]);
+
   async function checkout() {
-    if (!name.trim()) {
+    const orderName =
+      name.trim() ||
+      items.map((item) => item.selection.personalization?.trim()).find((v) => v) ||
+      "";
+    if (!orderName) {
       toast.error("Enter the name for this order.");
       return;
     }
@@ -58,7 +71,7 @@ function CartPage() {
     try {
       const result = await placeOrder({
         data: {
-          customerName: name.trim(),
+          customerName: orderName,
           items: items.map((item) => ({
             productId: item.productId,
             productName: item.productName,
@@ -69,7 +82,7 @@ function CartPage() {
             texture: optionLabel(item.labels, item.selection, "texture"),
             quantity: item.selection.quantity,
             unitPriceCents: item.unitPriceCents,
-            personalization: item.selection.personalization,
+            personalization: item.selection.personalization || orderName,
             g3dpg: item.g3dpg,
           })),
         },
@@ -128,9 +141,11 @@ function CartPage() {
                       ? ` · ${optionLabel(item.labels, item.selection, "texture")}`
                       : ""}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    For {item.selection.personalization}
-                  </p>
+                  {item.selection.personalization ? (
+                    <p className="text-sm text-muted-foreground">
+                      For {item.selection.personalization}
+                    </p>
+                  ) : null}
                   <div className="mt-2 flex items-center gap-3">
                     <Input
                       className="h-10 w-20"
@@ -161,9 +176,15 @@ function CartPage() {
               <Input
                 id="order-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setNameTouched(true);
+                  setName(e.target.value);
+                }}
                 placeholder="Your name"
               />
+              <p className="text-xs text-muted-foreground">
+                Filled from the name you entered on the product page. You can change it if needed.
+              </p>
             </div>
 
             <div className="flex items-center justify-between border-t border-border pt-5">
