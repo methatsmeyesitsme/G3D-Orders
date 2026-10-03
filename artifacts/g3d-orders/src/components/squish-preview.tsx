@@ -22,9 +22,12 @@ export function SquishPreview({
   const shape = findChoice(product.shapes, selection.shape);
   const color = findChoice(product.colors, selection.color);
   const firmness = findChoice(product.firmnessOptions, selection.firmness);
-  // Always use the product / shape photo — never swap or tint by selected color.
+  // Prefer the color's own photo; if none is assigned, use the product cover image.
   const photo =
-    SHAPE_IMAGES[shape?.g3dpgValue || shape?.id || ""] || product.imageUrl;
+    (color?.imageUrl && color.imageUrl.trim()) ||
+    product.imageUrl ||
+    SHAPE_IMAGES[shape?.g3dpgValue || shape?.id || ""] ||
+    "";
   const firmIndex = Math.max(
     0,
     product.firmnessOptions.findIndex((item) => item.id === firmness?.id),
@@ -53,11 +56,17 @@ export function SquishPreview({
         className="relative aspect-square overflow-hidden"
         style={{ transform: `scaleY(${squish})`, transformOrigin: "bottom" }}
       >
-        <img
-          src={photo}
-          alt={`${product.name} ${shape?.label ?? ""}`}
-          className="h-full w-full object-cover"
-        />
+        {photo ? (
+          <img
+            src={photo}
+            alt={`${product.name} ${color?.label ?? ""} ${shape?.label ?? ""}`}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+            No image
+          </div>
+        )}
         {grain > 0 ? (
           <div
             className="pointer-events-none absolute inset-0 mix-blend-overlay"
