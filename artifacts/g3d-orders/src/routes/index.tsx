@@ -9,14 +9,20 @@ import {
   type HomeLayout,
 } from "@/lib/home-layout";
 import { getHomeLayout } from "@/lib/home-layout.functions";
-import { listLines, getLineBySlug } from "@/lib/store.functions";
+import {
+  listLines,
+  getLineBySlug,
+  listStandaloneProducts,
+} from "@/lib/store.functions";
+import type { Product } from "@/lib/types";
 import { cn, formatMoney } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [lines, layout] = await Promise.all([
+    const [lines, layout, standalone] = await Promise.all([
       listLines(),
       getHomeLayout().catch(() => null),
+      listStandaloneProducts().catch(() => [] as Product[]),
     ]);
     const ordered = orderLines(lines, layout?.lineOrder ?? []).filter(
       (l) => !layout || !isHidden(layout as HomeLayout, `line:${l.id}`),
@@ -25,13 +31,21 @@ export const Route = createFileRoute("/")({
     const featured = featuredLine
       ? await getLineBySlug({ data: { slug: featuredLine.slug } })
       : null;
-    return { lines: ordered, featured, layout: layout as HomeLayout | null };
+    const standaloneVisible = (standalone ?? []).filter(
+      (p) => !layout || !isHidden(layout as HomeLayout, `product:${p.id}`),
+    );
+    return {
+      lines: ordered,
+      featured,
+      standalone: standaloneVisible,
+      layout: layout as HomeLayout | null,
+    };
   },
   component: Home,
 });
 
 function Home() {
-  const { lines, featured, layout } = Route.useLoaderData();
+  const { lines, featured, standalone, layout } = Route.useLoaderData();
   const cover = featured?.line.coverGifUrl || featured?.line.coverImageUrl;
   const L = layout;
   const free = Boolean(L?.freeLayout);
@@ -46,6 +60,7 @@ function Home() {
   const placement = L?.heroPlacement ?? "text-left";
   const cols = L?.linesGridCols ?? 2;
   const p = L?.positions;
+  const productPos = p?.products ?? {};
 
   if (free && p) {
     return (
@@ -133,6 +148,33 @@ function Home() {
                     {line.name}
                   </p>
                   <p className="text-sm text-muted-foreground">{line.tagline}</p>
+                </div>
+              </Link>
+            );
+          })}
+          {standalone.map((product, idx) => {
+            const baseY = 56 + Math.ceil(lines.length / 2) * 22;
+            const col = idx % 2;
+            const row = Math.floor(idx / 2);
+            const fallback = { x: 4 + col * 48, y: baseY + row * 22 };
+            return (
+              <Link
+                key={product.id}
+                to="/p/$productSlug"
+                params={{ productSlug: product.slug }}
+                className="w-[44%] overflow-hidden rounded-xl bg-card shadow-[var(--shadow-border)]"
+                style={posStyle(productPos[product.id] ?? fallback)}
+              >
+                <div className="aspect-[16/10] overflow-hidden bg-paper">
+                  <MediaFrame src={product.imageUrl} alt={product.name} />
+                </div>
+                <div className="space-y-1 p-4">
+                  <p className="font-display text-lg font-semibold">
+                    {product.name}
+                  </p>
+                  <p className="text-sm tabular-nums text-muted-foreground">
+                    From {formatMoney(product.basePriceCents)}
+                  </p>
                 </div>
               </Link>
             );
@@ -241,6 +283,30 @@ function Home() {
               <div className="space-y-1 p-5">
                 <p className="font-display text-xl font-semibold">{line.name}</p>
                 <p className="text-sm text-muted-foreground">{line.tagline}</p>
+              </div>
+            </Link>
+          ))}
+          {standalone.map((product) => (
+            <Link
+              key={product.id}
+              to="/p/$productSlug"
+              params={{ productSlug: product.slug }}
+              className="group overflow-hidden rounded-xl bg-card shadow-[var(--shadow-border)]"
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-paper">
+                <MediaFrame
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className="space-y-1 p-5">
+                <p className="font-display text-xl font-semibold">
+                  {product.name}
+                </p>
+                <p className="text-sm tabular-nums text-muted-foreground">
+                  From {formatMoney(product.basePriceCents)}
+                </p>
               </div>
             </Link>
           ))}
