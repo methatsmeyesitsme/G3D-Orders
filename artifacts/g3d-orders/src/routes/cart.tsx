@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
@@ -34,12 +34,10 @@ function CartPage() {
   const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<{
-    orderNumber: string;
     totalCents: number;
   } | null>(null);
   const total = cartTotal(items);
@@ -89,7 +87,6 @@ function CartPage() {
       });
       clear();
       setConfirmation({
-        orderNumber: result.orderNumber,
         totalCents: result.totalCents,
       });
     } catch (err) {
@@ -209,35 +206,17 @@ function CartPage() {
           <DialogHeader>
             <DialogTitle>Order received</DialogTitle>
             <DialogDescription>
-              Your order is saved on the server and will show in the admin panel.
-              Keep this order number for reference.
+              Your order was sent to the shop. You can close this and keep browsing.
             </DialogDescription>
           </DialogHeader>
           {confirmation ? (
             <div className="rounded-lg bg-muted p-4">
-              <p className="text-sm text-muted-foreground">Order number</p>
-              <p className="mt-1 font-display text-xl font-semibold">
-                {confirmation.orderNumber}
-              </p>
-              <p className="mt-3 text-sm">
+              <p className="text-sm">
                 Total: {formatMoney(confirmation.totalCents)}
               </p>
             </div>
           ) : null}
           <DialogFooter>
-            {confirmation ? (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  void navigate({
-                    to: "/order/$orderNumber",
-                    params: { orderNumber: confirmation.orderNumber },
-                  })
-                }
-              >
-                View order
-              </Button>
-            ) : null}
             <Button onClick={() => setConfirmation(null)}>Done</Button>
           </DialogFooter>
         </DialogContent>
