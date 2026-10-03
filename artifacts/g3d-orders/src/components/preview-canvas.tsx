@@ -431,6 +431,22 @@ export function TextEditor(props: {
       )}
       <div className="flex flex-wrap gap-2">
         <label className="text-xs text-muted-foreground">
+          Font
+          <select
+            className="ml-1 rounded border border-border bg-background px-1 py-0.5"
+            value={style.fontFamily}
+            onChange={(e) =>
+              onStyle({
+                fontFamily: e.target.value as TextStyle["fontFamily"],
+              })
+            }
+          >
+            <option value="display">Display (serif)</option>
+            <option value="sans">Sans</option>
+            <option value="mono">Mono</option>
+          </select>
+        </label>
+        <label className="text-xs text-muted-foreground">
           Size
           <input
             type="number"
