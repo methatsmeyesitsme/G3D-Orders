@@ -1,1 +1,312 @@
-PLACEHOLDER_PRODUCT
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { FileUrlField } from "@/components/file-url-field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { OptionEditor } from "@/components/option-editor";
+import { useAdminAccess } from "@/lib/admin-access-store";
+import { listCatalog, upsertProduct } from "@/lib/store.functions";
+import type { Product, ProductLine } from "@/lib/types";
+
+export const Route = createFileRoute("/admin/product/$id")({
+  component: ProductEditor,
+});
+
+function ProductEditor() {
+  const { id } = Route.useParams();
+  const adminCode = useAdminAccess((s) => s.code);
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [lines, setLines] = useState<ProductLine[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void listCatalog({ data: { adminCode } }).then((catalog) => {
+      setProduct(catalog.products.find((item) => item.id === id) ?? null);
+      setLines(catalog.lines);
+    });
+  }, [adminCode, id]);
+
+  if (!product) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">
+        Loading product…
+      </div>
+    );
+  }
+
+  const extra = product.extraSettings ?? {};
+
+  async function save() {
+    const current = product;
+    if (!current) return;
+    setBusy(true);
+    try {
+      await upsertProduct({
+        data: {
+          adminCode: adminCode,
+          id: current.id,
+          lineId: current.lineId || "",
+          name: current.name,
+          slug: current.slug,
+          description: current.description,
+          basePriceCents: current.basePriceCents,
+          imageUrl: current.imageUrl,
+          gifUrl: current.gifUrl,
+          videoUrl: current.videoUrl,
+          gallery: current.gallery,
+          shapes: current.shapes,
+          colors: current.colors,
+          firmnessOptions: current.firmnessOptions,
+          textureEnabled: current.textureEnabled,
+          textureOptions: current.textureOptions,
+          infillPattern: current.infillPattern,
+          sizeMm: current.sizeMm,
+          extraSettings: current.extraSettings,
+          active: current.active,
+          sortOrder: current.sortOrder,
+        },
+      });
+      toast.success("Product saved");
+      void navigate({ to: "/admin/catalog" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+      <Link to="/admin/catalog" className="text-sm text-muted-foreground">
+        Catalog
+      </Link>
+      <h1 className="mt-2 font-display text-3xl font-semibold">Edit product</h1>
+      <div className="mt-8 space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input
+              value={product.name}
+              onChange={(e) => setProduct({ ...product, name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Slug</Label>
+            <Input
+              value={product.slug}
+              onChange={(e) => setProduct({ ...product, slug: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Product line</Label>
+          <select
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={product.lineId || ""}
+            onChange={(e) =>
+              setProduct({ ...product, lineId: e.target.value })
+            }
+          >
+            <option value="">None (standalone)</option>
+            {lines.map((line) => (
+              <option key={line.id} value={line.id}>
+                {line.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            None means this product is not under a product line. Store URL:{" "}
+            {product.lineId
+              ? `/line/…/p/${product.slug}`
+              : `/p/${product.slug}`}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label>Description</Label>
+          <Textarea
+            value={product.description}
+            onChange={(e) =>
+              setProduct({ ...product, description: e.target.value })
+            }
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label>Base price (cents)</Label>
+            <Input
+              type="number"
+              value={product.basePriceCents}
+              onChange={(e) =>
+                setProduct({
+                  ...product,
+                  basePriceCents: Number(e.target.value) || 0,
+                })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Size (mm)</Label>
+            <Input
+              type="number"
+              value={product.sizeMm}
+              onChange={(e) =>
+                setProduct({ ...product, sizeMm: Number(e.target.value) || 50 })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Infill pattern</Label>
+            <Input
+              value={product.infillPattern}
+              onChange={(e) =>
+                setProduct({ ...product, infillPattern: e.target.value })
+              }
+            />
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Mesh quality</Label>
+            <Input
+              value={String(extra.quality ?? "192")}
+              onChange={(e) =>
+                setProduct({
+                  ...product,
+                  extraSettings: { ...extra, quality: e.target.value },
+                })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Sort</Label>
+            <Input
+              type="number"
+              value={product.sortOrder}
+              onChange={(e) =>
+                setProduct({
+                  ...product,
+                  sortOrder: Number(e.target.value) || 0,
+                })
+              }
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Slider</Label>
+          <select
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={extra.sliderClicks === false ? "no-click" : "click"}
+            onChange={(e) =>
+              setProduct({
+                ...product,
+                extraSettings: {
+                  ...extra,
+                  sliderClicks: e.target.value === "click",
+                },
+              })
+            }
+          >
+            <option value="click">Click</option>
+            <option value="no-click">No click</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Design option for this product’s slider — with discrete clicks or smooth with no clicks.
+          </p>
+        </div>
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={product.active}
+            onChange={(e) =>
+              setProduct({ ...product, active: e.target.checked })
+            }
+          />
+          Visible in the store
+        </label>
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={product.textureEnabled}
+            onChange={(e) =>
+              setProduct({ ...product, textureEnabled: e.target.checked })
+            }
+          />
+          Texture is available
+        </label>
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={Boolean(extra.rounded)}
+            onChange={(e) =>
+              setProduct({
+                ...product,
+                extraSettings: { ...extra, rounded: e.target.checked },
+              })
+            }
+          />
+          Rounded edges in G3DPG
+        </label>
+
+        <FileUrlField
+          label="Main picture"
+          value={product.imageUrl}
+          accept="image/*"
+          onChange={(imageUrl) => setProduct({ ...product, imageUrl })}
+        />
+        <FileUrlField
+          label="GIF"
+          value={product.gifUrl}
+          accept="image/gif"
+          onChange={(gifUrl) => setProduct({ ...product, gifUrl })}
+        />
+        <FileUrlField
+          label="Video"
+          value={product.videoUrl}
+          accept="video/*"
+          onChange={(videoUrl) => setProduct({ ...product, videoUrl })}
+        />
+
+        <OptionEditor
+          title="Shapes"
+          hint="G3DPG values: cube, sphere, cylinder, ring, gumdrop"
+          options={product.shapes}
+          onChange={(shapes) => setProduct({ ...product, shapes })}
+          showG3d
+        />
+        <OptionEditor
+          title="Colors"
+          options={product.colors}
+          onChange={(colors) => setProduct({ ...product, colors })}
+          showHex
+        />
+        <OptionEditor
+          title="Firmness"
+          hint="Thickness and periods map into G3DPG."
+          options={product.firmnessOptions}
+          onChange={(firmnessOptions) =>
+            setProduct({ ...product, firmnessOptions })
+          }
+          kind="firmness"
+        />
+        {product.textureEnabled ? (
+          <OptionEditor
+            title="Texture"
+            options={product.textureOptions}
+            onChange={(textureOptions) =>
+              setProduct({ ...product, textureOptions })
+            }
+            kind="texture"
+          />
+        ) : null}
+
+        <Button disabled={busy} onClick={() => void save()}>
+          {busy ? "Saving…" : "Save product"}
+        </Button>
+      </div>
+    </div>
+  );
+}
