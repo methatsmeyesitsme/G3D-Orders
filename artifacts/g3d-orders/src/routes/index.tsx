@@ -1,1 +1,1 @@
-PLACEHOLDER_IDX
+SEE_FILE_index-home.tsx
