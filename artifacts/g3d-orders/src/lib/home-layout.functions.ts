@@ -31,6 +31,7 @@ const positionsSchema = z.object({
   heroMedia: posSchema.nullable(),
   linesHeading: posSchema.nullable(),
   lines: z.record(z.string(), posSchema),
+  products: z.record(z.string(), posSchema).optional().default({}),
 });
 
 const customTextSchema = z.object({
