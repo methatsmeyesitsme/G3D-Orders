@@ -9,7 +9,6 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { MediaFrame } from "@/components/media-frame";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import {
   DEFAULT_CUSTOM_TEXT_STYLE,
@@ -18,8 +17,6 @@ import {
   mergeHomeLayout,
   newCustomTextId,
   orderLines,
-  posStyle,
-  textStyleCss,
   type CustomTextBlock,
   type HomeLayout,
   type LayoutPos,
@@ -34,7 +31,6 @@ import {
 } from "@/lib/home-layout.functions";
 import { listLines, listStandaloneProducts } from "@/lib/store.functions";
 import type { Product, ProductLine } from "@/lib/types";
-import { cn, formatMoney } from "@/lib/utils";
 import { FreeCanvas, FlowCanvas, TextEditor } from "@/components/preview-canvas";
 
 export const Route = createFileRoute("/admin/preview")({
@@ -73,6 +69,8 @@ function PreviewPage() {
     moved: boolean;
   } | null>(null);
   const [activeDrag, setActiveDrag] = useState<DragKey | null>(null);
+  const heightRepeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heightDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pushHistory = useCallback(() => {
     const snap = mergeHomeLayout(
@@ -93,6 +91,38 @@ function PreviewPage() {
     },
     [pushHistory],
   );
+
+  function stopHeightRepeat() {
+    if (heightDelayRef.current) {
+      clearTimeout(heightDelayRef.current);
+      heightDelayRef.current = null;
+    }
+    if (heightRepeatRef.current) {
+      clearInterval(heightRepeatRef.current);
+      heightRepeatRef.current = null;
+    }
+  }
+
+  function nudgeCanvasHeight(delta: number) {
+    const current = layoutRef.current.canvasHeightPx ?? 720;
+    const next = Math.min(3200, Math.max(480, current + delta));
+    if (next === current) return;
+    applyLayout(
+      mergeHomeLayout({ ...layoutRef.current, canvasHeightPx: next }),
+      false,
+    );
+  }
+
+  function startHeightRepeat(delta: number) {
+    stopHeightRepeat();
+    pushHistory();
+    nudgeCanvasHeight(delta);
+    heightDelayRef.current = setTimeout(() => {
+      heightRepeatRef.current = setInterval(() => {
+        nudgeCanvasHeight(delta);
+      }, 40);
+    }, 280);
+  }
 
   const load = useCallback(async () => {
     try {
@@ -116,6 +146,10 @@ function PreviewPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    return () => stopHeightRepeat();
+  }, []);
 
   const orderedLines = useMemo(
     () =>
@@ -374,16 +408,15 @@ function PreviewPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2"
-              title="Shorter canvas"
-              onClick={() =>
-                patch({
-                  canvasHeightPx: Math.max(
-                    480,
-                    (layoutRef.current.canvasHeightPx ?? 720) - 120,
-                  ),
-                })
-              }
+              className="h-8 px-2 select-none"
+              title="Hold to shrink faster"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                startHeightRepeat(-120);
+              }}
+              onPointerUp={stopHeightRepeat}
+              onPointerLeave={stopHeightRepeat}
+              onPointerCancel={stopHeightRepeat}
             >
               −
             </Button>
@@ -397,16 +430,15 @@ function PreviewPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2"
-              title="Taller canvas"
-              onClick={() =>
-                patch({
-                  canvasHeightPx: Math.min(
-                    3200,
-                    (layoutRef.current.canvasHeightPx ?? 720) + 120,
-                  ),
-                })
-              }
+              className="h-8 px-2 select-none"
+              title="Hold to grow faster"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                startHeightRepeat(120);
+              }}
+              onPointerUp={stopHeightRepeat}
+              onPointerLeave={stopHeightRepeat}
+              onPointerCancel={stopHeightRepeat}
             >
               +
             </Button>
@@ -417,7 +449,7 @@ function PreviewPage() {
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        Add text, click to select, Delete to remove, drag to move (including standalone products). Use − / + to make the canvas shorter or taller. Undo reverses the last change. Save writes the live store layout.
+        Add text, click to select, Delete to remove, drag to move (including standalone products). Hold − / + to change height quickly. Undo reverses the last change. Save writes the live store layout.
       </p>
       <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
         <div
