@@ -29,6 +29,8 @@ export type ExtraSettings = {
   cornerRadius?: number;
   periodsOverride?: number;
   thicknessOverride?: number;
+  /** Slider design: true = with clicks, false = smooth / no clicks */
+  sliderClicks?: boolean;
 };
 
 export type ProductLine = {
