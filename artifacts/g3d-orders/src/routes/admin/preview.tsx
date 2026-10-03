@@ -35,6 +35,7 @@ import {
 import { listLines, listStandaloneProducts } from "@/lib/store.functions";
 import type { Product, ProductLine } from "@/lib/types";
 import { cn, formatMoney } from "@/lib/utils";
+import { FreeCanvas, FlowCanvas, TextEditor } from "@/components/preview-canvas";
 
 export const Route = createFileRoute("/admin/preview")({
   component: PreviewPage,
@@ -497,5 +498,3 @@ function PreviewPage() {
     </div>
   );
 }
-
-// SEE_REMAINING_IN_LOCAL_FILE_PART2
