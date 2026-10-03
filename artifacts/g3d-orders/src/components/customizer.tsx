@@ -104,7 +104,7 @@ export function Customizer({
           autoComplete="name"
         />
         <p className="text-xs text-muted-foreground">
-          Required — used on the order and in the print file name.
+          Required — used on the order.
         </p>
       </div>
 
