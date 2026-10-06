@@ -36,7 +36,13 @@ export function FreeCanvas(props: {
   const hidden = (k: string) => isHidden(layout, k);
 
   return (
-    <div className="relative h-full w-full p-2" style={{ minHeight: layout.canvasHeightPx ?? 720 }}>
+    <div
+      className="relative h-full w-full p-2"
+      style={{
+        height: layout.canvasHeightPx ?? 720,
+        minHeight: layout.canvasHeightPx ?? 720,
+      }}
+    >
       {!hidden("heroEyebrow") ? (
         <DragItem
           k="heroEyebrow"
