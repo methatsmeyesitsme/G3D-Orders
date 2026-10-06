@@ -90,6 +90,18 @@ export function Customizer({
   const price = unitPriceCents(product, selection);
   const patch = (partial: Partial<Selection>) =>
     onChange({ ...selection, ...partial });
+  const colorParts = product.colorParts ?? [];
+
+  function setPartColor(partId: string, colorId: string) {
+    const partColors = { ...(selection.partColors || {}), [partId]: colorId };
+    // Keep primary color in sync with the first part for previews / legacy
+    const firstPart = colorParts[0];
+    const color =
+      firstPart && partId === firstPart.id
+        ? colorId
+        : selection.color || colorId;
+    patch({ partColors, color });
+  }
 
   return (
     <div className="space-y-8">
@@ -114,13 +126,33 @@ export function Customizer({
         value={selection.shape}
         onChange={(shape) => patch({ shape })}
       />
-      <OptionGrid
-        label="Color"
-        options={product.colors}
-        value={selection.color}
-        onChange={(color) => patch({ color })}
-        swatches
-      />
+
+      {colorParts.length > 0 ? (
+        colorParts.map((part) => (
+          <OptionGrid
+            key={part.id}
+            label={part.label}
+            options={product.colors}
+            value={
+              selection.partColors?.[part.id] ||
+              selection.color ||
+              product.colors[0]?.id ||
+              ""
+            }
+            onChange={(colorId) => setPartColor(part.id, colorId)}
+            swatches
+          />
+        ))
+      ) : (
+        <OptionGrid
+          label="Color"
+          options={product.colors}
+          value={selection.color}
+          onChange={(color) => patch({ color })}
+          swatches
+        />
+      )}
+
       <OptionGrid
         label="Firmness"
         options={product.firmnessOptions}
