@@ -11,6 +11,7 @@ import {
   buildG3dpgConfig,
   defaultSelection,
   findChoice,
+  formatColorLabel,
   unitPriceCents,
 } from "@/lib/pricing";
 
@@ -42,16 +43,20 @@ function StandaloneProductPage() {
       return;
     }
     const shape = findChoice(product.shapes, selection.shape);
-    const color = findChoice(product.colors, selection.color);
     const firmness = findChoice(product.firmnessOptions, selection.firmness);
     const texture = product.textureEnabled
       ? findChoice(product.textureOptions, selection.texture)
       : undefined;
     const g3dpg = buildG3dpgConfig(product, selection);
+    const partKey = Object.entries(selection.partColors || {})
+      .map(([k, v]) => `${k}:${v}`)
+      .sort()
+      .join(",");
     const key = [
       product.id,
       selection.shape,
       selection.color,
+      partKey,
       selection.firmness,
       selection.texture,
       name.toLowerCase(),
@@ -67,7 +72,7 @@ function StandaloneProductPage() {
       selection,
       labels: {
         shape: shape?.label ?? selection.shape,
-        color: color?.label ?? selection.color,
+        color: formatColorLabel(product, selection),
         firmness: firmness?.label ?? selection.firmness,
         texture: texture?.label ?? selection.texture ?? "",
       },
