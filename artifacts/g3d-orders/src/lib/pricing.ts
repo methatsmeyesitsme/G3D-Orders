@@ -4,6 +4,22 @@ export function findChoice(list: OptionChoice[], id: string) {
   return list.find((item) => item.id === id) ?? list[0];
 }
 
+/** Human-readable color line for cart / orders (single or multi-part). */
+export function formatColorLabel(product: Product, selection: Selection): string {
+  const parts = product.colorParts ?? [];
+  if (!parts.length) {
+    return findChoice(product.colors, selection.color)?.label ?? selection.color ?? "";
+  }
+  return parts
+    .map((part) => {
+      const colorId =
+        selection.partColors?.[part.id] || selection.color || product.colors[0]?.id || "";
+      const choice = findChoice(product.colors, colorId);
+      return `${part.label}: ${choice?.label ?? colorId}`;
+    })
+    .join(" · ");
+}
+
 export function unitPriceCents(product: Product, selection: Selection) {
   let total = product.basePriceCents;
   const add = (list: OptionChoice[], id: string) => {
@@ -11,16 +27,31 @@ export function unitPriceCents(product: Product, selection: Selection) {
     if (choice) total += choice.priceDelta;
   };
   add(product.shapes, selection.shape);
-  add(product.colors, selection.color);
+  const parts = product.colorParts ?? [];
+  if (parts.length) {
+    for (const part of parts) {
+      const colorId = selection.partColors?.[part.id] || selection.color;
+      if (colorId) add(product.colors, colorId);
+    }
+  } else {
+    add(product.colors, selection.color);
+  }
   add(product.firmnessOptions, selection.firmness);
   if (product.textureEnabled) add(product.textureOptions, selection.texture);
   return total;
 }
 
 export function defaultSelection(product: Product): Selection {
+  const defaultColor = product.colors[0]?.id ?? "";
+  const parts = product.colorParts ?? [];
+  const partColors: Record<string, string> = {};
+  for (const part of parts) {
+    partColors[part.id] = defaultColor;
+  }
   return {
     shape: product.shapes[0]?.id ?? "",
-    color: product.colors[0]?.id ?? "",
+    color: defaultColor,
+    partColors,
     firmness: product.firmnessOptions[0]?.id ?? "",
     texture: product.textureEnabled
       ? (product.textureOptions[0]?.id ?? "")
