@@ -59,7 +59,7 @@ export type HomeLayout = {
   linesGridCols: 1 | 2 | 3;
   /** When true, text and product cards use free absolute positions. */
   freeLayout: boolean;
-  /** Min height of free-layout home canvas in px (Preview + storefront). */
+  /** Fixed height of free-layout home canvas in px (Preview + storefront). */
   canvasHeightPx: number;
   positions: LayoutPositions;
   /** Element keys removed via Preview delete (restored by Reset / Undo). */
@@ -218,6 +218,61 @@ export function posStyle(pos: LayoutPos | null | undefined): Record<string, stri
     left: `${pos.x}%`,
     top: `${pos.y}%`,
     maxWidth: "42%",
+  };
+}
+
+/**
+ * When the canvas height changes, rescale Y percentages so elements keep the
+ * same pixel distance from the top (text and product buttons stay put).
+ */
+export function scaleLayoutForCanvasHeight(
+  layout: HomeLayout,
+  oldHeightPx: number,
+  newHeightPx: number,
+): HomeLayout {
+  if (!oldHeightPx || !newHeightPx || oldHeightPx === newHeightPx) {
+    return { ...layout, canvasHeightPx: newHeightPx };
+  }
+  const factor = oldHeightPx / newHeightPx;
+  const scaleY = (pos: LayoutPos | null | undefined): LayoutPos | null => {
+    if (!pos) return null;
+    return {
+      x: pos.x,
+      y: Math.min(98, Math.max(0, pos.y * factor)),
+    };
+  };
+  const scaleMap = (map: Record<string, LayoutPos>) => {
+    const next: Record<string, LayoutPos> = {};
+    for (const [id, pos] of Object.entries(map || {})) {
+      if (pos) {
+        next[id] = {
+          x: pos.x,
+          y: Math.min(98, Math.max(0, pos.y * factor)),
+        };
+      }
+    }
+    return next;
+  };
+  const positions = layout.positions;
+  return {
+    ...layout,
+    canvasHeightPx: newHeightPx,
+    positions: {
+      heroEyebrow: scaleY(positions.heroEyebrow),
+      heroTitle: scaleY(positions.heroTitle),
+      heroBody: scaleY(positions.heroBody),
+      heroMedia: scaleY(positions.heroMedia),
+      linesHeading: scaleY(positions.linesHeading),
+      lines: scaleMap(positions.lines),
+      products: scaleMap(positions.products || {}),
+    },
+    customTexts: (layout.customTexts || []).map((block) => ({
+      ...block,
+      pos: {
+        x: block.pos.x,
+        y: Math.min(98, Math.max(0, block.pos.y * factor)),
+      },
+    })),
   };
 }
 
