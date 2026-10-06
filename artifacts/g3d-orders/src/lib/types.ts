@@ -27,6 +27,9 @@ export type GalleryItem = {
   alt?: string;
 };
 
+/** Slider design choice for products that use a slider. */
+export type SliderMode = "click" | "no-click" | "none";
+
 export type ExtraSettings = {
   quality?: string;
   walls?: boolean;
@@ -35,7 +38,14 @@ export type ExtraSettings = {
   cornerRadius?: number;
   periodsOverride?: number;
   thicknessOverride?: number;
-  /** Slider design: true = with clicks, false = smooth / no clicks */
+  /**
+   * Slider design:
+   * - "click" = discrete clicks
+   * - "no-click" = smooth / no clicks
+   * - "none" = no slider treatment for this product
+   */
+  sliderMode?: SliderMode;
+  /** @deprecated Prefer sliderMode. true = click, false = no-click. */
   sliderClicks?: boolean;
 };
 
@@ -172,3 +182,14 @@ export const ORDER_STATUSES: { id: OrderStatus; label: string }[] = [
   { id: "completed", label: "Completed" },
   { id: "cancelled", label: "Cancelled" },
 ];
+
+/** Resolve slider mode from extra settings (supports legacy sliderClicks). */
+export function resolveSliderMode(extra: ExtraSettings | undefined | null): SliderMode {
+  if (!extra) return "click";
+  if (extra.sliderMode === "click" || extra.sliderMode === "no-click" || extra.sliderMode === "none") {
+    return extra.sliderMode;
+  }
+  if (extra.sliderClicks === false) return "no-click";
+  if (extra.sliderClicks === true) return "click";
+  return "click";
+}
