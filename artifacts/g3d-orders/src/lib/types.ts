@@ -15,6 +15,12 @@ export type OptionChoice = {
   meta?: OptionMeta;
 };
 
+/** Named region that gets its own color pick (e.g. "Rollers", "Base"). */
+export type ColorPart = {
+  id: string;
+  label: string;
+};
+
 export type GalleryItem = {
   url: string;
   kind: "image" | "gif" | "video";
@@ -59,6 +65,8 @@ export type Product = {
   gallery: GalleryItem[];
   shapes: OptionChoice[];
   colors: OptionChoice[];
+  /** When non-empty, customer picks a color for each named part. */
+  colorParts: ColorPart[];
   firmnessOptions: OptionChoice[];
   textureEnabled: boolean;
   textureOptions: OptionChoice[];
@@ -72,6 +80,8 @@ export type Product = {
 export type Selection = {
   shape: string;
   color: string;
+  /** part id → color option id (when product has colorParts) */
+  partColors: Record<string, string>;
   firmness: string;
   texture: string;
   quantity: number;
