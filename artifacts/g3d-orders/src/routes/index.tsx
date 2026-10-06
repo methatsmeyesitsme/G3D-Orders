@@ -67,7 +67,10 @@ function Home() {
       <SiteShell>
         <div
           className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16"
-          style={{ minHeight: L?.canvasHeightPx ?? 720 }}
+          style={{
+            height: L?.canvasHeightPx ?? 720,
+            minHeight: L?.canvasHeightPx ?? 720,
+          }}
         >
           {!hidden("heroEyebrow") ? (
             <div
