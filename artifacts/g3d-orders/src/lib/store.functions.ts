@@ -72,6 +72,7 @@ function normalizeCatalogPricing(catalog: Catalog): Catalog {
       ...product,
       shapes: product.shapes.map((s) => ({ ...s, priceDelta: 0 })),
       colors: product.colors.map((c) => ({ ...c, priceDelta: 0 })),
+      colorParts: Array.isArray((product as any).colorParts) ? (product as any).colorParts : [],
       firmnessOptions: normalizeOptionDeltas(
         Array.isArray(product.firmnessOptions) ? (product.firmnessOptions as any) : [],
         "firmness",
@@ -121,7 +122,7 @@ async function nextOrderNumber() {
   }
   return `G3D-${Date.now().toString(36).toUpperCase()}`;
 }
-function mapProduct(p:Product,line?:ProductLine):Product { return {...p,lineSlug:line?.slug,lineName:line?.name}; }
+function mapProduct(p:Product,line?:ProductLine):Product { return {...p,lineSlug:line?.slug,lineName:line?.name,colorParts:Array.isArray(p.colorParts)?p.colorParts:[]}; }
 function activeProducts(c:Catalog,line:ProductLine) { return c.products.filter(p=>p.lineId===line.id&&p.active).sort((a,b)=>a.sortOrder-b.sortOrder||a.name.localeCompare(b.name)).map(p=>mapProduct(p,line)); }
 
 export const checkStoreAccess=createServerFn({method:"GET"}).handler(async()=>hasStoreAccess());
@@ -235,6 +236,7 @@ export const listCatalog=createServerFn({method:"POST"}).validator(z.object({adm
 });
 const optionSchema=z.object({id:z.string().min(1),label:z.string().min(1),priceDelta:z.number().int(),hex:z.string().optional(),g3dpgValue:z.string().optional(),imageUrl:z.string().optional(),meta:z.object({thickness:z.number().optional(),periods:z.number().optional(),toggle:z.boolean().optional(),amount:z.number().optional()}).optional()});
 const gallerySchema=z.object({url:z.string(),kind:z.enum(["image","gif","video"]),alt:z.string().optional()});
+const colorPartSchema=z.object({id:z.string().min(1),label:z.string().min(1).max(40)});
 const extraSchema=z.object({quality:z.string().optional(),walls:z.boolean().optional(),wallThickness:z.number().optional(),rounded:z.boolean().optional(),cornerRadius:z.number().optional(),periodsOverride:z.number().optional(),thicknessOverride:z.number().optional(),sliderClicks:z.boolean().optional()});
 export const upsertLine=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),id:z.string().optional(),name:z.string().min(1).max(80),slug:z.string().min(1).max(48),tagline:z.string().max(160),description:z.string().max(4000),coverImageUrl:z.string().max(400000),coverGifUrl:z.string().max(400000),sortOrder:z.number().int()})).handler(async({data})=>{
   assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("line"); const line:ProductLine={id,slug:slugify(data.slug),name:data.name.trim(),tagline:data.tagline.trim(),description:data.description.trim(),coverImageUrl:data.coverImageUrl,coverGifUrl:data.coverGifUrl,sortOrder:data.sortOrder};
@@ -245,10 +247,10 @@ export const deleteLine=createServerFn({method:"POST"}).validator(z.object({admi
 });
 export const upsertProduct=createServerFn({method:"POST"}).validator(z.object({
   adminCode:z.string(),id:z.string().optional(),lineId:z.string(),name:z.string().min(1).max(80),slug:z.string().min(1).max(48),description:z.string().max(4000),basePriceCents:z.number().int().min(0),
-  imageUrl:z.string().max(400000),gifUrl:z.string().max(400000),videoUrl:z.string().max(400000),gallery:z.array(gallerySchema),shapes:z.array(optionSchema),colors:z.array(optionSchema),firmnessOptions:z.array(optionSchema),textureEnabled:z.boolean(),textureOptions:z.array(optionSchema),
+  imageUrl:z.string().max(400000),gifUrl:z.string().max(400000),videoUrl:z.string().max(400000),gallery:z.array(gallerySchema),shapes:z.array(optionSchema),colors:z.array(optionSchema),colorParts:z.array(colorPartSchema).optional(),firmnessOptions:z.array(optionSchema),textureEnabled:z.boolean(),textureOptions:z.array(optionSchema),
   infillPattern:z.string().min(1).max(40),sizeMm:z.number().int().min(8).max(400),extraSettings:extraSchema,active:z.boolean(),sortOrder:z.number().int()
 })).handler(async({data})=>{
-  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId.trim(),slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:data.basePriceCents,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes.map(s=>({...s,priceDelta:0})),colors:data.colors.map(c=>({...c,priceDelta:0})),firmnessOptions:normalizeOptionDeltas((data.firmnessOptions||[]) as any,"firmness") as typeof data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:normalizeOptionDeltas((data.textureOptions||[]) as any,"texture") as typeof data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
+  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=data.id??newId("prod"); const product:Product={id,lineId:data.lineId.trim(),slug:slugify(data.slug),name:data.name.trim(),description:data.description.trim(),basePriceCents:data.basePriceCents,imageUrl:data.imageUrl,gifUrl:data.gifUrl,videoUrl:data.videoUrl,gallery:data.gallery,shapes:data.shapes.map(s=>({...s,priceDelta:0})),colors:data.colors.map(c=>({...c,priceDelta:0})),colorParts:Array.isArray(data.colorParts)?data.colorParts.map(p=>({id:String(p.id),label:String(p.label).trim()||"Part"})):[],firmnessOptions:normalizeOptionDeltas((data.firmnessOptions||[]) as any,"firmness") as typeof data.firmnessOptions,textureEnabled:data.textureEnabled,textureOptions:normalizeOptionDeltas((data.textureOptions||[]) as any,"texture") as typeof data.textureOptions,infillPattern:data.infillPattern,sizeMm:data.sizeMm,extraSettings:data.extraSettings,active:data.active,sortOrder:data.sortOrder};
   await writeCatalog({...c,products:[...c.products.filter(p=>p.id!==id),product]},`Update product ${product.name}`); return {id,slug:product.slug};
 });
 export const deleteProduct=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),id:z.string()})).handler(async({data})=>{
@@ -262,7 +264,7 @@ export const setProductActive=createServerFn({method:"POST"}).validator(z.object
   return {ok:true as const,active:data.active};
 });
 export const createProductFromTemplate=createServerFn({method:"POST"}).validator(z.object({adminCode:z.string(),lineId:z.string(),name:z.string().min(1).max(80)})).handler(async({data})=>{
-  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=newId("prod"); const lineId=data.lineId.trim(); const p:Product={id,lineId,slug:slugify(data.name),name:data.name.trim(),description:"",basePriceCents:BASE_SHAPE_PRICE_CENTS,imageUrl:"",gifUrl:"",videoUrl:"",gallery:[],shapes:DEFAULT_SHAPES,colors:DEFAULT_COLORS,firmnessOptions:DEFAULT_FIRMNESS,textureEnabled:true,textureOptions:DEFAULT_TEXTURE,infillPattern:"gyroid",sizeMm:50,extraSettings:{quality:"192",rounded:true,cornerRadius:5,sliderClicks:true},active:true,sortOrder:c.products.filter(x=>x.lineId===lineId).length};
+  assertAdminAccess(data.adminCode); const c=await readCatalog(); const id=newId("prod"); const lineId=data.lineId.trim(); const p:Product={id,lineId,slug:slugify(data.name),name:data.name.trim(),description:"",basePriceCents:BASE_SHAPE_PRICE_CENTS,imageUrl:"",gifUrl:"",videoUrl:"",gallery:[],shapes:DEFAULT_SHAPES,colors:DEFAULT_COLORS,colorParts:[],firmnessOptions:DEFAULT_FIRMNESS,textureEnabled:true,textureOptions:DEFAULT_TEXTURE,infillPattern:"gyroid",sizeMm:50,extraSettings:{quality:"192",rounded:true,cornerRadius:5,sliderClicks:true},active:true,sortOrder:c.products.filter(x=>x.lineId===lineId).length};
   await writeCatalog({...c,products:[...c.products,p]},`Create product ${p.name}`); return {id:p.id,slug:p.slug};
 });
 function slugify(value:string){return value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"").slice(0,48)||"item";}
