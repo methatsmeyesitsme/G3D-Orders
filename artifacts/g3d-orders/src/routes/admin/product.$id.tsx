@@ -9,11 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { OptionEditor } from "@/components/option-editor";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import { listCatalog, upsertProduct } from "@/lib/store.functions";
-import type { Product, ProductLine } from "@/lib/types";
+import type { ColorPart, Product, ProductLine } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/product/$id")({
   component: ProductEditor,
 });
+
+function newPartId() {
+  return `part_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+}
 
 function ProductEditor() {
   const { id } = Route.useParams();
@@ -25,7 +29,15 @@ function ProductEditor() {
 
   useEffect(() => {
     void listCatalog({ data: { adminCode } }).then((catalog) => {
-      setProduct(catalog.products.find((item) => item.id === id) ?? null);
+      const found = catalog.products.find((item) => item.id === id) ?? null;
+      if (found) {
+        setProduct({
+          ...found,
+          colorParts: Array.isArray(found.colorParts) ? found.colorParts : [],
+        });
+      } else {
+        setProduct(null);
+      }
       setLines(catalog.lines);
     });
   }, [adminCode, id]);
@@ -39,6 +51,11 @@ function ProductEditor() {
   }
 
   const extra = product.extraSettings ?? {};
+  const colorParts = product.colorParts ?? [];
+
+  function setColorParts(next: ColorPart[]) {
+    setProduct({ ...product!, colorParts: next });
+  }
 
   async function save() {
     const current = product;
@@ -60,6 +77,7 @@ function ProductEditor() {
           gallery: current.gallery,
           shapes: current.shapes,
           colors: current.colors,
+          colorParts: current.colorParts ?? [],
           firmnessOptions: current.firmnessOptions,
           textureEnabled: current.textureEnabled,
           textureOptions: current.textureOptions,
@@ -279,10 +297,80 @@ function ProductEditor() {
         />
         <OptionEditor
           title="Colors"
+          hint="Shared color palette for this product."
           options={product.colors}
           onChange={(colors) => setProduct({ ...product, colors })}
           showHex
         />
+
+        <section className="space-y-3 rounded-xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-display text-base font-semibold">
+                Color parts
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Leave empty for a single Color choice. Add parts so the customer
+                picks a color for each region — e.g. "Rollers" and "Base".
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setColorParts([
+                  ...colorParts,
+                  {
+                    id: newPartId(),
+                    label: colorParts.length === 0 ? "Rollers" : "Base",
+                  },
+                ])
+              }
+            >
+              Add part
+            </Button>
+          </div>
+          {colorParts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Single color mode (default).
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {colorParts.map((part, index) => (
+                <div
+                  key={part.id}
+                  className="flex flex-wrap items-end gap-2 rounded-lg bg-secondary/60 p-3"
+                >
+                  <div className="min-w-[10rem] flex-1 space-y-1">
+                    <Label>Part name</Label>
+                    <Input
+                      value={part.label}
+                      placeholder="e.g. Rollers"
+                      onChange={(e) => {
+                        const next = colorParts.map((p, i) =>
+                          i === index ? { ...p, label: e.target.value } : p,
+                        );
+                        setColorParts(next);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setColorParts(colorParts.filter((_, i) => i !== index))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <OptionEditor
           title="Firmness"
           hint="Thickness and periods map into G3DPG."
