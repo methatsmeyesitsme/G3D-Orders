@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { OptionEditor } from "@/components/option-editor";
 import { useAdminAccess } from "@/lib/admin-access-store";
 import { listCatalog, upsertProduct } from "@/lib/store.functions";
-import type { ColorPart, Product, ProductLine } from "@/lib/types";
+import type { ColorPart, Product, ProductLine, SliderMode } from "@/lib/types";
+import { resolveSliderMode } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/product/$id")({
   component: ProductEditor,
@@ -217,22 +218,27 @@ function ProductEditor() {
           <Label>Slider</Label>
           <select
             className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-            value={extra.sliderClicks === false ? "no-click" : "click"}
-            onChange={(e) =>
+            value={resolveSliderMode(extra)}
+            onChange={(e) => {
+              const mode = e.target.value as SliderMode;
               setProduct({
                 ...product,
                 extraSettings: {
                   ...extra,
-                  sliderClicks: e.target.value === "click",
+                  sliderMode: mode,
+                  // Keep legacy boolean in sync when not "none"
+                  sliderClicks:
+                    mode === "none" ? undefined : mode === "click",
                 },
-              })
-            }
+              });
+            }}
           >
             <option value="click">Click</option>
             <option value="no-click">No click</option>
+            <option value="none">None</option>
           </select>
           <p className="text-xs text-muted-foreground">
-            Design option for this product’s slider — with discrete clicks or smooth with no clicks.
+            Slider design: discrete clicks, smooth with no clicks, or none (no slider treatment).
           </p>
         </div>
         <label className="flex min-h-11 items-center gap-2 text-sm">
