@@ -93,6 +93,9 @@ export function Customizer({
   const colorParts = product.colorParts ?? [];
   const extra = product.extraSettings ?? {};
   const secondPrice = Math.max(0, Number(extra.secondColorPriceCents) || 0);
+  const secondLabel =
+    (extra.secondColorLabel || colorParts[1]?.label || "Second color").trim() ||
+    "Second color";
 
   function setPartColor(partId: string, colorId: string) {
     const partColors = { ...(selection.partColors || {}), [partId]: colorId };
@@ -129,7 +132,93 @@ export function Customizer({
         onChange={(shape) => patch({ shape })}
       />
 
-      {colorParts.length > 0 ? (
+      {extra.secondColorOffer ? (
+        /* Optional second color: primary always, second only when switch is on */
+        <>
+          <OptionGrid
+            label={colorParts[0]?.label || "Color"}
+            options={product.colors}
+            value={
+              (colorParts[0] &&
+                (selection.partColors?.[colorParts[0].id] ||
+                  selection.color)) ||
+              selection.color ||
+              product.colors[0]?.id ||
+              ""
+            }
+            onChange={(colorId) => {
+              if (colorParts[0]) {
+                setPartColor(colorParts[0].id, colorId);
+              } else {
+                patch({ color: colorId });
+              }
+            }}
+            swatches
+          />
+          <div className="space-y-3">
+            <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm">
+              <span>
+                {secondLabel}
+                {secondPrice > 0 ? (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    +{formatMoney(secondPrice)}
+                  </span>
+                ) : null}
+              </span>
+              <input
+                type="checkbox"
+                className="size-5 accent-foreground"
+                checked={Boolean(selection.secondColorOn)}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  const secondId =
+                    selection.secondColor ||
+                    (colorParts[1] &&
+                      selection.partColors?.[colorParts[1].id]) ||
+                    selection.color ||
+                    product.colors[0]?.id ||
+                    "";
+                  const partColors = { ...(selection.partColors || {}) };
+                  if (colorParts[1] && on) {
+                    partColors[colorParts[1].id] = secondId;
+                  }
+                  patch({
+                    secondColorOn: on,
+                    secondColor: secondId,
+                    partColors,
+                  });
+                }}
+              />
+            </label>
+            {selection.secondColorOn ? (
+              <OptionGrid
+                label={secondLabel}
+                options={product.colors}
+                value={
+                  selection.secondColor ||
+                  (colorParts[1] &&
+                    selection.partColors?.[colorParts[1].id]) ||
+                  selection.color ||
+                  product.colors[0]?.id ||
+                  ""
+                }
+                onChange={(colorId) => {
+                  const partColors = { ...(selection.partColors || {}) };
+                  if (colorParts[1]) {
+                    partColors[colorParts[1].id] = colorId;
+                  }
+                  patch({
+                    partColors,
+                    secondColor: colorId,
+                    secondColorOn: true,
+                  });
+                }}
+                swatches
+              />
+            ) : null}
+          </div>
+        </>
+      ) : colorParts.length > 0 ? (
         colorParts.map((part) => (
           <OptionGrid
             key={part.id}
@@ -146,62 +235,13 @@ export function Customizer({
           />
         ))
       ) : (
-        <>
-          <OptionGrid
-            label="Color"
-            options={product.colors}
-            value={selection.color}
-            onChange={(color) => patch({ color })}
-            swatches
-          />
-          {extra.secondColorOffer ? (
-            <div className="space-y-3">
-              <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm">
-                <span>
-                  {(extra.secondColorLabel || "Second color").trim() ||
-                    "Second color"}
-                  {secondPrice > 0 ? (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      +{formatMoney(secondPrice)}
-                    </span>
-                  ) : null}
-                </span>
-                <input
-                  type="checkbox"
-                  className="size-5 accent-foreground"
-                  checked={Boolean(selection.secondColorOn)}
-                  onChange={(e) =>
-                    patch({
-                      secondColorOn: e.target.checked,
-                      secondColor:
-                        selection.secondColor ||
-                        selection.color ||
-                        product.colors[0]?.id ||
-                        "",
-                    })
-                  }
-                />
-              </label>
-              {selection.secondColorOn ? (
-                <OptionGrid
-                  label={
-                    (extra.secondColorLabel || "Second color").trim() ||
-                    "Second color"
-                  }
-                  options={product.colors}
-                  value={
-                    selection.secondColor ||
-                    selection.color ||
-                    product.colors[0]?.id ||
-                    ""
-                  }
-                  onChange={(secondColor) => patch({ secondColor })}
-                  swatches
-                />
-              ) : null}
-            </div>
-          ) : null}
-        </>
+        <OptionGrid
+          label="Color"
+          options={product.colors}
+          value={selection.color}
+          onChange={(color) => patch({ color })}
+          swatches
+        />
       )}
 
       <OptionGrid
