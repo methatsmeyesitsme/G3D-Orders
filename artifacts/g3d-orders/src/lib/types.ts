@@ -47,6 +47,12 @@ export type ExtraSettings = {
   sliderMode?: SliderMode;
   /** @deprecated Prefer sliderMode. true = click, false = no-click. */
   sliderClicks?: boolean;
+  /** When true, customer can toggle an optional second color. */
+  secondColorOffer?: boolean;
+  /** Flat surcharge (cents) added when the second-color switch is on. */
+  secondColorPriceCents?: number;
+  /** Label for the second color picker (default "Second color"). */
+  secondColorLabel?: string;
 };
 
 export type ProductLine = {
@@ -92,6 +98,10 @@ export type Selection = {
   color: string;
   /** part id → color option id (when product has colorParts) */
   partColors: Record<string, string>;
+  /** Customer turned on the optional second color. */
+  secondColorOn?: boolean;
+  /** Color option id for the second color (when secondColorOn). */
+  secondColor?: string;
   firmness: string;
   texture: string;
   quantity: number;
