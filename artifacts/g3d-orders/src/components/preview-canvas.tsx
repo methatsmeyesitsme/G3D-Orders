@@ -371,22 +371,30 @@ function DragItem(props: {
 }) {
   const { k, selected, active, pos, onSelect, onPointerDown, children, wide } =
     props;
+  const isActive = active === k;
+  const isSelected = selected === k;
+  const basePos = posStyle(pos) || {};
   return (
     <div
       className={cn(
-        "absolute max-w-[42%] cursor-grab touch-none rounded border border-transparent p-1",
+        "absolute max-w-[42%] cursor-grab touch-none select-none rounded border border-transparent p-1",
         wide && "w-[44%] max-w-none",
-        selected === k && "border-accent ring-1 ring-accent/40",
-        active === k && "cursor-grabbing opacity-90",
+        isSelected && "border-accent ring-1 ring-accent/40",
+        isActive && "cursor-grabbing opacity-90",
       )}
-      style={posStyle(pos)}
+      style={{
+        ...basePos,
+        // Raise the card you are moving so it is not trapped under another card
+        zIndex: isActive ? 40 : isSelected ? 30 : 1,
+      }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(k);
       }}
       onPointerDown={(e) => onPointerDown(e, k)}
     >
-      {children}
+      {/* pointer-events-none so img/video never steal the drag */}
+      <div className="pointer-events-none">{children}</div>
     </div>
   );
 }
