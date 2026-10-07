@@ -241,6 +241,73 @@ function ProductEditor() {
             Slider design: discrete clicks, smooth with no clicks, or none (no slider treatment).
           </p>
         </div>
+        <section className="space-y-3 rounded-xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+          <label className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={Boolean(extra.secondColorOffer)}
+              onChange={(e) =>
+                setProduct({
+                  ...product,
+                  extraSettings: {
+                    ...extra,
+                    secondColorOffer: e.target.checked,
+                  },
+                })
+              }
+            />
+            Offer optional second color
+          </label>
+          {extra.secondColorOffer ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Second color label</Label>
+                <Input
+                  value={String(extra.secondColorLabel ?? "Second color")}
+                  placeholder="Second color"
+                  onChange={(e) =>
+                    setProduct({
+                      ...product,
+                      extraSettings: {
+                        ...extra,
+                        secondColorLabel: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Second color surcharge (cents)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={Number(extra.secondColorPriceCents) || 0}
+                  onChange={(e) =>
+                    setProduct({
+                      ...product,
+                      extraSettings: {
+                        ...extra,
+                        secondColorPriceCents: Math.max(
+                          0,
+                          Number(e.target.value) || 0,
+                        ),
+                      },
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Added to the price when the customer turns the switch on (e.g.
+                  200 = +$2.00).
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              When enabled, the store shows a switch for a second color and adds
+              the surcharge you set.
+            </p>
+          )}
+        </section>
         <label className="flex min-h-11 items-center gap-2 text-sm">
           <input
             type="checkbox"
