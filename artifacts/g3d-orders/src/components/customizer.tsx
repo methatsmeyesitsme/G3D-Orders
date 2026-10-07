@@ -93,8 +93,15 @@ export function Customizer({
   const colorParts = product.colorParts ?? [];
   const extra = product.extraSettings ?? {};
   const secondPrice = Math.max(0, Number(extra.secondColorPriceCents) || 0);
+  // Prefer admin label; else "{Part name} as a separate color"
+  const partName = (colorParts[1]?.label || colorParts[0]?.label || "").trim();
   const secondLabel =
-    (extra.secondColorLabel || colorParts[1]?.label || "Second color").trim() ||
+    (extra.secondColorLabel || "").trim() ||
+    (partName ? `${partName} as a separate color` : "Second color as a separate color");
+  // Short label for the color picker once the switch is on
+  const secondPickerLabel =
+    (extra.secondColorLabel || "").trim() ||
+    partName ||
     "Second color";
 
   function setPartColor(partId: string, colorId: string) {
@@ -192,7 +199,7 @@ export function Customizer({
             </label>
             {selection.secondColorOn ? (
               <OptionGrid
-                label={secondLabel}
+                label={secondPickerLabel}
                 options={product.colors}
                 value={
                   selection.secondColor ||
