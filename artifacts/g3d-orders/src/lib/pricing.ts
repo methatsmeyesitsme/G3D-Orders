@@ -7,6 +7,22 @@ export function findChoice(list: OptionChoice[], id: string) {
 /** Human-readable color line for cart / orders (single or multi-part). */
 export function formatColorLabel(product: Product, selection: Selection): string {
   const parts = product.colorParts ?? [];
+  const extra = product.extraSettings ?? {};
+  if (extra.secondColorOffer) {
+    const primary =
+      findChoice(product.colors, selection.color)?.label ?? selection.color ?? "";
+    if (selection.secondColorOn && selection.secondColor) {
+      const second =
+        findChoice(product.colors, selection.secondColor)?.label ??
+        selection.secondColor;
+      const label =
+        (extra.secondColorLabel || parts[1]?.label || "Second color").trim() ||
+        "Second color";
+      const primaryLabel = parts[0]?.label ? `${parts[0].label}: ${primary}` : primary;
+      return `${primaryLabel} · ${label}: ${second}`;
+    }
+    return parts[0]?.label ? `${parts[0].label}: ${primary}` : primary;
+  }
   if (parts.length) {
     return parts
       .map((part) => {
@@ -17,16 +33,7 @@ export function formatColorLabel(product: Product, selection: Selection): string
       })
       .join(" · ");
   }
-  const primary =
-    findChoice(product.colors, selection.color)?.label ?? selection.color ?? "";
-  const extra = product.extraSettings ?? {};
-  if (extra.secondColorOffer && selection.secondColorOn && selection.secondColor) {
-    const second =
-      findChoice(product.colors, selection.secondColor)?.label ?? selection.secondColor;
-    const label = (extra.secondColorLabel || "Second color").trim() || "Second color";
-    return `${primary} · ${label}: ${second}`;
-  }
-  return primary;
+  return findChoice(product.colors, selection.color)?.label ?? selection.color ?? "";
 }
 
 export function unitPriceCents(product: Product, selection: Selection) {
@@ -37,18 +44,21 @@ export function unitPriceCents(product: Product, selection: Selection) {
   };
   add(product.shapes, selection.shape);
   const parts = product.colorParts ?? [];
-  if (parts.length) {
+  const extra = product.extraSettings ?? {};
+  if (extra.secondColorOffer) {
+    // Primary color always; second color + flat surcharge only when switch is on
+    add(product.colors, selection.color);
+    if (selection.secondColorOn) {
+      total += Math.max(0, Number(extra.secondColorPriceCents) || 0);
+      if (selection.secondColor) add(product.colors, selection.secondColor);
+    }
+  } else if (parts.length) {
     for (const part of parts) {
       const colorId = selection.partColors?.[part.id] || selection.color;
       if (colorId) add(product.colors, colorId);
     }
   } else {
     add(product.colors, selection.color);
-  }
-  const extra = product.extraSettings ?? {};
-  if (extra.secondColorOffer && selection.secondColorOn) {
-    total += Math.max(0, Number(extra.secondColorPriceCents) || 0);
-    if (selection.secondColor) add(product.colors, selection.secondColor);
   }
   add(product.firmnessOptions, selection.firmness);
   if (product.textureEnabled) add(product.textureOptions, selection.texture);
