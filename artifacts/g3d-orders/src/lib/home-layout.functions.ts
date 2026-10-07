@@ -19,10 +19,23 @@ const textStyleSchema = z.object({
   fontWeight: z.number().min(100).max(900),
 });
 
-const posSchema = z.object({
-  x: z.number().min(0).max(100),
-  y: z.number().min(0).max(100),
-});
+/** Accept slightly out-of-range floats from drag math and clamp. */
+const posSchema = z.preprocess(
+  (val) => {
+    if (!val || typeof val !== "object") return val;
+    const v = val as { x?: unknown; y?: unknown };
+    const x = Number(v.x);
+    const y = Number(v.y);
+    return {
+      x: Math.min(100, Math.max(0, Number.isFinite(x) ? x : 0)),
+      y: Math.min(100, Math.max(0, Number.isFinite(y) ? y : 0)),
+    };
+  },
+  z.object({
+    x: z.number().min(0).max(100),
+    y: z.number().min(0).max(100),
+  }),
+);
 
 const positionsSchema = z.object({
   heroEyebrow: posSchema.nullable(),
@@ -30,8 +43,9 @@ const positionsSchema = z.object({
   heroBody: posSchema.nullable(),
   heroMedia: posSchema.nullable(),
   linesHeading: posSchema.nullable(),
-  lines: z.record(z.string(), posSchema),
-  products: z.record(z.string(), posSchema).optional().default({}),
+  lines: z.record(z.string(), posSchema).default({}),
+  // Always keep product (standalone) card positions — do not strip on save
+  products: z.record(z.string(), posSchema).default({}),
 });
 
 const customTextSchema = z.object({
@@ -91,6 +105,10 @@ export const saveHomeLayout = createServerFn({ method: "POST" })
     assertStoreAccess();
     assertAdmin(data.adminCode);
     const layout = mergeHomeLayout(data.layout);
+    // Ensure products map is never dropped when writing
+    if (!layout.positions.products) {
+      layout.positions.products = {};
+    }
     await db
       .insert(g3dCatalogState)
       .values({ id: HOME_ID, catalog: layout as unknown as Record<string, unknown> })
