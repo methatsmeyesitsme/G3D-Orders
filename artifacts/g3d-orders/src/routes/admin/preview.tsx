@@ -89,6 +89,8 @@ function PreviewPage() {
     (next: HomeLayout, recordHistory = true) => {
       if (recordHistory) pushHistory();
       const merged = mergeHomeLayout(next);
+      // Keep ref in sync immediately so rapid drags / save never see stale positions
+      layoutRef.current = merged;
       setLayout(merged);
     },
     [pushHistory],
@@ -213,17 +215,18 @@ function PreviewPage() {
   }
 
   function getPos(key: DragKey): LayoutPos | null {
+    const L = layoutRef.current;
     if (key.startsWith("text:")) {
       const id = key.slice(5);
-      return layout.customTexts.find((b) => b.id === id)?.pos ?? null;
+      return L.customTexts.find((b) => b.id === id)?.pos ?? null;
     }
     if (key.startsWith("line:")) {
-      return layout.positions.lines[key.slice(5)] ?? null;
+      return L.positions.lines[key.slice(5)] ?? null;
     }
     if (key.startsWith("product:")) {
-      return (layout.positions.products || {})[key.slice(8)] ?? null;
+      return (L.positions.products || {})[key.slice(8)] ?? null;
     }
-    return (layout.positions as any)[key] ?? null;
+    return (L.positions as any)[key] ?? null;
   }
 
   function defaultPosFor(key: DragKey): LayoutPos {
@@ -319,7 +322,47 @@ function PreviewPage() {
   async function save() {
     setSaving(true);
     try {
-      const next = mergeHomeLayout(layoutRef.current);
+      const current = layoutRef.current;
+      // Materialize a position for every visible line/product card so Save
+      // never drops a card that only used the fallback placement.
+      const positions = {
+        ...current.positions,
+        lines: { ...(current.positions.lines || {}) },
+        products: { ...(current.positions.products || {}) },
+      };
+      const visibleLines = orderLines(lines, current.lineOrder).filter(
+        (l) => !isHidden(current, `line:${l.id}`),
+      );
+      visibleLines.forEach((line, idx) => {
+        if (!positions.lines[line.id]) {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          positions.lines[line.id] = { x: 4 + col * 48, y: 56 + row * 22 };
+        }
+      });
+      const visibleProducts = standalone.filter(
+        (p) => !isHidden(current, `product:${p.id}`),
+      );
+      const baseY = 56 + Math.ceil(visibleLines.length / 2) * 22;
+      visibleProducts.forEach((product, idx) => {
+        if (!positions.products[product.id]) {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          positions.products[product.id] = {
+            x: 4 + col * 48,
+            y: baseY + row * 22,
+          };
+        }
+      });
+      const next = mergeHomeLayout({
+        ...current,
+        freeLayout:
+          current.freeLayout ||
+          Object.keys(positions.lines).length > 0 ||
+          Object.keys(positions.products).length > 0,
+        positions,
+      });
+      layoutRef.current = next;
       saveHomeLayoutClient(next);
       if (adminCode) {
         await saveHomeLayout({ data: { adminCode, layout: next } });
