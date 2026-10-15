@@ -22,8 +22,8 @@ export const Route = createFileRoute("/cart")({
 });
 
 function optionLabel(
-  labels: { shape: string; color: string; firmness: string; texture: string } | undefined,
-  selection: { shape: string; color: string; firmness: string; texture: string },
+  labels: { shape: string; color: string; firmness: string; texture: string; custom?: string } | undefined,
+  selection: { shape: string; color: string; firmness: string; texture: string; customOption?: string },
   key: "shape" | "color" | "firmness" | "texture",
 ) {
   return labels?.[key] || selection[key] || "—";
@@ -77,7 +77,12 @@ function CartPage() {
             shape: optionLabel(item.labels, item.selection, "shape"),
             color: optionLabel(item.labels, item.selection, "color"),
             firmness: optionLabel(item.labels, item.selection, "firmness"),
-            texture: optionLabel(item.labels, item.selection, "texture"),
+            texture: [
+              optionLabel(item.labels, item.selection, "texture"),
+              item.labels?.custom,
+            ]
+              .filter((part) => part && part !== "—")
+              .join(" · "),
             quantity: item.selection.quantity,
             unitPriceCents: item.unitPriceCents,
             personalization: item.selection.personalization || orderName,
@@ -137,6 +142,7 @@ function CartPage() {
                     {item.selection.texture
                       ? ` · ${optionLabel(item.labels, item.selection, "texture")}`
                       : ""}
+                    {item.labels?.custom ? ` · ${item.labels.custom}` : ""}
                   </p>
                   {item.selection.personalization ? (
                     <p className="text-sm text-muted-foreground">
