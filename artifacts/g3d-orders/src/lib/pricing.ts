@@ -62,6 +62,16 @@ export function unitPriceCents(product: Product, selection: Selection) {
   }
   add(product.firmnessOptions, selection.firmness);
   if (product.textureEnabled) add(product.textureOptions, selection.texture);
+  const custom = product.extraSettings?.customOption;
+  if (
+    custom?.enabled &&
+    Array.isArray(custom.options) &&
+    custom.options.length > 0 &&
+    selection.customOption
+  ) {
+    const choice = custom.options.find((o) => o.id === selection.customOption);
+    if (choice) total += Number(choice.priceDelta) || 0;
+  }
   return total;
 }
 
@@ -78,6 +88,12 @@ export function defaultSelection(product: Product): Selection {
     partColors,
     secondColorOn: false,
     secondColor: defaultColor,
+    customOption:
+      product.extraSettings?.customOption?.enabled &&
+      Array.isArray(product.extraSettings.customOption.options) &&
+      product.extraSettings.customOption.options.length > 0
+        ? product.extraSettings.customOption.options[0].id
+        : "",
     firmness: product.firmnessOptions[0]?.id ?? "",
     texture: product.textureEnabled
       ? (product.textureOptions[0]?.id ?? "")
