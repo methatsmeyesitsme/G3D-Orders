@@ -53,6 +53,15 @@ export type ExtraSettings = {
   secondColorPriceCents?: number;
   /** Label for the second color picker (default "Second color"). */
   secondColorLabel?: string;
+  /**
+   * Optional admin-defined choice group (e.g. "Size tier", "Add-on").
+   * When enabled with options, customers pick one; priceDelta is in cents.
+   */
+  customOption?: {
+    enabled?: boolean;
+    name?: string;
+    options?: Array<{ id: string; label: string; priceDelta: number }>;
+  };
 };
 
 export type ProductLine = {
@@ -102,6 +111,8 @@ export type Selection = {
   secondColorOn?: boolean;
   /** Color option id for the second color (when secondColorOn). */
   secondColor?: string;
+  /** Selected id from product.extraSettings.customOption.options */
+  customOption?: string;
   firmness: string;
   texture: string;
   quantity: number;
@@ -123,6 +134,8 @@ export type CartItem = {
     color: string;
     firmness: string;
     texture: string;
+    /** Optional custom option label, e.g. "Size: Large" */
+    custom?: string;
   };
   unitPriceCents: number;
   g3dpg: G3dpgConfig;
@@ -199,7 +212,8 @@ export function resolveSliderMode(extra: ExtraSettings | undefined | null): Slid
   if (extra.sliderMode === "click" || extra.sliderMode === "no-click" || extra.sliderMode === "none") {
     return extra.sliderMode;
   }
-  if (extra.sliderClicks === false) return "no-click";
-  if (extra.sliderClicks === true) return "click";
+  if (typeof extra.sliderClicks === "boolean") {
+    return extra.sliderClicks ? "click" : "no-click";
+  }
   return "click";
 }
