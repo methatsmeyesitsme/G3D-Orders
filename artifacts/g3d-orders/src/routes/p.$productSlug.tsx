@@ -57,6 +57,7 @@ function StandaloneProductPage() {
       selection.shape,
       selection.color,
       partKey,
+      selection.customOption || "",
       selection.firmness,
       selection.texture,
       name.toLowerCase(),
@@ -75,6 +76,16 @@ function StandaloneProductPage() {
         color: formatColorLabel(product, selection),
         firmness: firmness?.label ?? selection.firmness,
         texture: texture?.label ?? selection.texture ?? "",
+        custom: (() => {
+          const cfg = product.extraSettings?.customOption;
+          if (!cfg?.enabled || !selection.customOption) return undefined;
+          const choice = (cfg.options || []).find(
+            (o) => o.id === selection.customOption,
+          );
+          if (!choice) return undefined;
+          const group = (cfg.name || "Option").trim() || "Option";
+          return `${group}: ${choice.label}`;
+        })(),
       },
       unitPriceCents: price,
       g3dpg,
