@@ -21,7 +21,8 @@ const GH_BRANCH = process.env.G3D_GITHUB_BRANCH?.trim() || "main";
 const API = "https://api.github.com";
 const CATALOG_PATH = "data/catalog.json";
 
-type Catalog = { lines: ProductLine[]; products: Product[] };
+type CatalogSnapshot = { lines: ProductLine[]; products: Product[] };
+type Catalog = CatalogSnapshot & { __undoHistory?: CatalogSnapshot[] };
 
 function assertAdminAccess(code: string) { if (code !== ADMIN_CODE) throw new Error("Admin access denied"); }
 
@@ -102,13 +103,38 @@ async function readCatalog():Promise<Catalog> {
   }
   return normalizeCatalogPricing(catalog);
 }
+const UNDO_PASSCODE = process.env.G3D_UNDO_PASSCODE?.trim();
+
+function catalogSnapshot(catalog: Catalog): CatalogSnapshot {
+  return JSON.parse(JSON.stringify({ lines: catalog.lines, products: catalog.products })) as CatalogSnapshot;
+}
+
 async function writeCatalog(catalog:Catalog,_message:string) {
   const normalized = normalizeCatalogPricing(catalog);
+  const [saved] = await db.select({ catalog: g3dCatalogState.catalog })
+    .from(g3dCatalogState)
+    .where(eq(g3dCatalogState.id, "primary"))
+    .limit(1);
+  let previous: CatalogSnapshot;
+  let history: CatalogSnapshot[] = [];
+  if (saved) {
+    const stored = saved.catalog as unknown as Catalog;
+    previous = catalogSnapshot(stored);
+    history = Array.isArray(stored.__undoHistory) ? stored.__undoHistory : [];
+  } else {
+    try {
+      previous = JSON.parse(decodeGithubContent((await getGithubFile(CATALOG_PATH)).content)) as CatalogSnapshot;
+    } catch {
+      previous = catalogSnapshot(localCatalog as unknown as Catalog);
+    }
+  }
+  const nextHistory = [...history, previous].slice(-30);
+  const catalogWithHistory = { ...normalized, __undoHistory: nextHistory };
   await db.insert(g3dCatalogState)
-    .values({ id: "primary", catalog: normalized })
+    .values({ id: "primary", catalog: catalogWithHistory })
     .onConflictDoUpdate({
       target: g3dCatalogState.id,
-      set: { catalog: normalized, updatedAt: new Date() },
+      set: { catalog: catalogWithHistory, updatedAt: new Date() },
     });
 }
 async function nextOrderNumber() {
@@ -138,25 +164,29 @@ export const verifyAdminCode=createServerFn({method:"POST"}).validator(z.object(
   if(data.code!==ADMIN_CODE) throw new Error("That admin code is not valid."); return {ok:true as const};
 });
 
-const UNDO_PASSCODE = process.env.G3D_UNDO_PASSCODE?.trim();
-export const undoLatestWebsiteChange = createServerFn({method:"POST"})
+export const undoLatestCatalogChange = createServerFn({method:"POST"})
   .validator(z.object({adminCode:z.string(), undoCode:z.string().min(1).max(200)}))
   .handler(async({data})=>{
     assertStoreAccess();
     assertAdminAccess(data.adminCode);
     if (!UNDO_PASSCODE || data.undoCode !== UNDO_PASSCODE) throw new Error("Undo password is incorrect or undo is not configured.");
-    if (!GH_TOKEN) throw new Error("Undo is not configured: G3D_GITHUB_TOKEN is missing.");
-    const latest = await ghJson<Array<{sha:string;commit:{message:string};parents:Array<{sha:string}>}>>(`/commits?sha=${encodeURIComponent(GH_BRANCH)}&per_page=1`);
-    const commit = latest[0];
-    if (!commit?.sha || !commit.parents?.length) throw new Error("No reversible website change was found.");
-    const response = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/reverts`, {
-      method: "POST",
-      headers: { ...ghHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ sha: commit.sha }),
-    });
-    if (!response.ok) throw new Error(response.status === 409 ? "The latest change cannot be automatically reverted because of conflicts." : `GitHub could not undo the latest change (${response.status}).`);
-    const reverted = await response.json() as {sha?:string;html_url?:string};
-    return {ok:true as const, revertedMessage:commit.commit.message, revertedSha:commit.sha, undoCommitSha:reverted.sha ?? "", undoUrl:reverted.html_url ?? ""};
+    const [saved] = await db.select({ catalog: g3dCatalogState.catalog })
+      .from(g3dCatalogState)
+      .where(eq(g3dCatalogState.id, "primary"))
+      .limit(1);
+    if (!saved) throw new Error("There are no catalog changes to undo yet.");
+    const current = saved.catalog as unknown as Catalog;
+    const history = Array.isArray(current.__undoHistory) ? current.__undoHistory : [];
+    const previous = history[history.length - 1];
+    if (!previous) throw new Error("There are no catalog changes left to undo.");
+    const restored = normalizeCatalogPricing({
+      ...previous,
+      __undoHistory: history.slice(0, -1),
+    } as Catalog);
+    await db.update(g3dCatalogState)
+      .set({ catalog: restored, updatedAt: new Date() })
+      .where(eq(g3dCatalogState.id, "primary"));
+    return {ok:true as const, message:"Restored the previous product catalog. Customer orders were not changed."};
   });
 
 export const listLines=createServerFn({method:"GET"}).handler(async()=> { assertStoreAccess(); return (await readCatalog()).lines.sort((a,b)=>a.sortOrder-b.sortOrder||a.name.localeCompare(b.name)); });
