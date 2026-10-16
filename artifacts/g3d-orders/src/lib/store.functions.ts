@@ -149,10 +149,10 @@ export const undoLatestWebsiteChange = createServerFn({method:"POST"})
     const latest = await ghJson<Array<{sha:string;commit:{message:string};parents:Array<{sha:string}>}>>(`/commits?sha=${encodeURIComponent(GH_BRANCH)}&per_page=1`);
     const commit = latest[0];
     if (!commit?.sha || !commit.parents?.length) throw new Error("No reversible website change was found.");
-    const response = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/reverts/${commit.sha}`, {
+    const response = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/reverts`, {
       method: "POST",
       headers: { ...ghHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ sha: commit.sha }),
     });
     if (!response.ok) throw new Error(response.status === 409 ? "The latest change cannot be automatically reverted because of conflicts." : `GitHub could not undo the latest change (${response.status}).`);
     const reverted = await response.json() as {sha?:string;html_url?:string};
