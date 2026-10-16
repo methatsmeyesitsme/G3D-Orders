@@ -137,6 +137,28 @@ export const verifyAdminCode=createServerFn({method:"POST"}).validator(z.object(
   assertStoreAccess();
   if(data.code!==ADMIN_CODE) throw new Error("That admin code is not valid."); return {ok:true as const};
 });
+
+const UNDO_PASSCODE = process.env.G3D_UNDO_PASSCODE?.trim();
+export const undoLatestWebsiteChange = createServerFn({method:"POST"})
+  .validator(z.object({adminCode:z.string(), undoCode:z.string().min(1).max(200)}))
+  .handler(async({data})=>{
+    assertStoreAccess();
+    assertAdminAccess(data.adminCode);
+    if (!UNDO_PASSCODE || data.undoCode !== UNDO_PASSCODE) throw new Error("Undo password is incorrect or undo is not configured.");
+    if (!GH_TOKEN) throw new Error("Undo is not configured: G3D_GITHUB_TOKEN is missing.");
+    const latest = await ghJson<Array<{sha:string;commit:{message:string};parents:Array<{sha:string}>}>>(`/commits?sha=${encodeURIComponent(GH_BRANCH)}&per_page=1`);
+    const commit = latest[0];
+    if (!commit?.sha || !commit.parents?.length) throw new Error("No reversible website change was found.");
+    const response = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/reverts/${commit.sha}`, {
+      method: "POST",
+      headers: { ...ghHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!response.ok) throw new Error(response.status === 409 ? "The latest change cannot be automatically reverted because of conflicts." : `GitHub could not undo the latest change (${response.status}).`);
+    const reverted = await response.json() as {sha?:string;html_url?:string};
+    return {ok:true as const, revertedMessage:commit.commit.message, revertedSha:commit.sha, undoCommitSha:reverted.sha ?? "", undoUrl:reverted.html_url ?? ""};
+  });
+
 export const listLines=createServerFn({method:"GET"}).handler(async()=> { assertStoreAccess(); return (await readCatalog()).lines.sort((a,b)=>a.sortOrder-b.sortOrder||a.name.localeCompare(b.name)); });
 export const getLineBySlug=createServerFn({method:"GET"}).validator(z.object({slug:z.string()})).handler(async({data})=>{
   assertStoreAccess();
