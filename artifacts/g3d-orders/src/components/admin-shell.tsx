@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useAdminAccess } from "@/lib/admin-access-store";
-import { undoLatestWebsiteChange } from "@/lib/store.functions";
+import { undoLatestCatalogChange } from "@/lib/store.functions";
 
 const LINKS: {
   to:
@@ -32,12 +32,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
   async function undoLatest() {
     const undoCode = window.prompt("Enter the undo password:");
     if (!undoCode) return;
-    if (!window.confirm("Undo the latest website code change? This creates a new revert commit and affects the entire website.")) return;
+    if (!window.confirm("Undo the latest product catalog change? This restores product and category details only. Customer orders will not be changed.")) return;
     setUndoing(true);
     try {
-      const result = await undoLatestWebsiteChange({ data: { adminCode, undoCode } });
-      toast.success("Latest website change undone", { description: result.revertedMessage });
-      if (result.undoUrl) window.open(result.undoUrl, "_blank", "noopener,noreferrer");
+      const result = await undoLatestCatalogChange({ data: { adminCode, undoCode } });
+      toast.success("Latest catalog change undone", { description: result.message });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not undo the latest change");
     } finally {
